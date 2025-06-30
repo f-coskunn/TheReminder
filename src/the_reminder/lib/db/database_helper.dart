@@ -34,7 +34,6 @@ extension TaskOperations on DatabaseHelper {
   }
 }
 
-
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -90,17 +89,8 @@ class DatabaseHelper {
         dueDateTime TEXT NOT NULL,
         isCompleted INTEGER DEFAULT 0,
         priority TEXT,
+        reminder TEXT, -- multivalued (e.g., 'audio,vibration')
         FOREIGN KEY (userID) REFERENCES User(userID)
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE Reminder (
-        reminderID INTEGER PRIMARY KEY,
-        taskID INTEGER NOT NULL,
-        type TEXT CHECK(type IN ('audio', 'visual', 'vibration')),
-        scheduledTime TEXT NOT NULL,
-        FOREIGN KEY (taskID) REFERENCES Task(taskID)
       );
     ''');
   }
