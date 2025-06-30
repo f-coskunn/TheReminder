@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
 import 'package:the_reminder/screens/homescreen.dart';
@@ -18,47 +19,43 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  //TODO: Burada singletonın initilize olması gerekiyor
   late List<Task> tasks;
+
   @override
   void initState() {
     super.initState();
-    tasks = TaskSingleton().tasks;
+    _initApp(); // async veritabanı başlatma
   }
 
-  refreshState(){
-    log("here");
+  Future<void> _initApp() async {
+    await DatabaseHelper().database;
+    tasks = TaskSingleton().tasks;
+    setState(() {});
+  }
+
+  void refreshState() {
+    log("Refreshing state after task creation");
     setState(() {
       tasks = TaskSingleton().tasks;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        //En üstte menü tuşu ve uygulama adı bulunan yer
         appBar: const ReminderAppBar(),
-
-        //Sol taraftan açılan menü
-        drawer: ReminderAppDrawer(),
-
-        //Task ekleme tuşu
-        floatingActionButton: TaskFloatingActionButton(callback:refreshState),
-        //Task ekleme tuşunun konumu
+        drawer: const ReminderAppDrawer(),
+        floatingActionButton: TaskFloatingActionButton(callback: refreshState),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-
-        //Ana sayfa
-        body: HomeScreen()
+        body: const HomeScreen(),
       ),
     );
   }
 }
 
 class ReminderAppDrawer extends StatelessWidget {
-  const ReminderAppDrawer({
-    super.key,
-  });
+  const ReminderAppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -67,12 +64,11 @@ class ReminderAppDrawer extends StatelessWidget {
         child: ListView(
           children: [
             ListTile(
-              //Basıldığında Ayarlar sayfasına yönlendir
               onTap: () {
                 log("Tap on settings");
               },
-              title: Text("Settings"),
-              trailing: Icon(Icons.settings),
+              title: const Text("Settings"),
+              trailing: const Icon(Icons.settings),
             )
           ],
         ),
@@ -81,9 +77,7 @@ class ReminderAppDrawer extends StatelessWidget {
   }
 }
 
-
-//Uygulamanın en üstünde uygulamanın adını ve mennü tuşunu gösteren kısım
-class ReminderAppBar extends StatelessWidget implements PreferredSizeWidget{
+class ReminderAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ReminderAppBar({super.key});
 
   @override
@@ -91,37 +85,33 @@ class ReminderAppBar extends StatelessWidget implements PreferredSizeWidget{
     return AppBar(
       title: const Text("TheReminder"),
       forceMaterialTransparency: true,
-      );
+    );
   }
-  
+
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-//Yeni task eklemek için sayfanın altında basılması gereken tuş
-//Tuş kullanıcıyı yeni task oluşturma ekranına yönlendirir
 class TaskFloatingActionButton extends StatefulWidget {
   final VoidCallback callback;
   const TaskFloatingActionButton({super.key, required this.callback});
 
   @override
-  State<TaskFloatingActionButton> createState() => _TaskFloatingActionButtonState();
+  State<TaskFloatingActionButton> createState() =>
+      _TaskFloatingActionButtonState();
 }
 
 class _TaskFloatingActionButtonState extends State<TaskFloatingActionButton> {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton.large(
-      //Tuşa basılınca task yaratma sayfasına git
-      onPressed: (){
+      onPressed: () {
         Navigator.push(
-          context, 
-          MaterialPageRoute(
-            builder: (context) => const CreatetaskScreen()
-          )
-        ).then((e)=>widget.callback());
+          context,
+          MaterialPageRoute(builder: (context) => const CreatetaskScreen()),
+        ).then((_) => widget.callback());
       },
-      shape: CircleBorder(),
+      shape: const CircleBorder(),
       child: const Icon(Icons.edit_outlined),
     );
   }
