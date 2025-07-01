@@ -1,44 +1,149 @@
+import 'dart:developer';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../model/task_model.dart';
+import 'package:the_reminder/model/reminder_model.dart';
+import 'package:the_reminder/model/task_model.dart';
 
-extension TaskOperations on DatabaseHelper {
-  Future<int> insertTask(Task task) async {
-    final db = await database;
-    return await db.insert('Task', task.toMap());
+class DatabaseHelper {
+  static List<Task>? _tasks;
+  static Database? _db;
+
+  //Singleton yapısı
+  static final DatabaseHelper instance = DatabaseHelper._();
+
+  //Private Constructor
+  DatabaseHelper._();
+
+  Future<Database> get database async{
+    //db == null ise get database() çağırıyor
+    _db ??=await getDatabase();
+    
+    return _db!;
   }
 
-  Future<List<Task>> getAllTasks() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('Task');
-    return List.generate(maps.length, (i) => Task.fromMap(maps[i]));
+  Future<List<Task>> get tasks async{
+    
+    return await _getTasks();
+
   }
 
-  Future<int> updateTask(Task task) async {
-    final db = await database;
-    return await db.update(
-      'Task',
-      task.toMap(),
-      where: 'taskID = ?',
-      whereArgs: [task.taskID],
+  Future<Database> getDatabase() async{
+    log("getting database");
+    final dbdir = await getDatabasesPath();
+    final dbpath = join(dbdir,"the_reminder_db.db");
+    final db = await openDatabase(
+      dbpath,
+      version: 1,
+      //Tablelar burada yaratılıyor ilk açılışta
+      //TODO: user ekliyeceksek buradan ekliyeceğiz
+      onCreate: (db,version){
+        //Task table
+        db.execute('''
+          CREATE TABLE Task (
+            taskID INTEGER PRIMARY KEY AUTOINCREMENT,
+            
+            title TEXT NOT NULL,
+            description TEXT,
+            dueDateTime TEXT NOT NULL,
+            isCompleted INTEGER DEFAULT 0,
+            priority TEXT
+            );
+          ''');
+        //Reminder Table
+        db.execute('''
+          CREATE TABLE Reminder (
+          reminderID INTEGER PRIMARY KEY AUTOINCREMENT,
+          taskID INTEGER NOT NULL,
+          reminderType TEXT,
+          FOREIGN KEY (taskID) REFERENCES Task(taskID)
+          );
+          ''');
+      }
     );
+    log("done gettin db");
+    return db;
   }
 
-  Future<int> deleteTask(int id) async {
+  Future<void> addTask(Task task) async{
     final db = await database;
-    return await db.delete(
+    log("adding task");log(task.toString());
+    //Task insert ediliyor
+    int id = await db.insert("Task", task.toMap());
+    log("adding task1.5");
+    //Taska ait reminder varsa onları da insert et
+    if(task.reminders.isNotEmpty){
+      log("adding task2");
+      for (var r in task.reminders) {
+
+        //remindera taskın idsini veriyoruz
+        r.taskID = id;
+        log("adding task3");
+        //Reminder insert ediliyor
+        await db.insert("Reminder", r.toMap());
+      }
+    }
+    
+  }
+
+  Future<void> deleteTask(int taskID) async{
+    final db = await database;
+
+    // Önce reminder'ları sil (foreign key constraint nedeniyle)
+    await db.delete(
+      'Reminder',
+      where: 'taskID = ?',
+      whereArgs: [taskID],
+    );
+
+    // Sonra task'ı sil
+    await db.delete(
       'Task',
       where: 'taskID = ?',
-      whereArgs: [id],
+      whereArgs: [taskID],
     );
+
+    // Cache'deki listeyi güncelle
+    _tasks?.removeWhere((t) => t.taskID == taskID);
   }
+
+  //Bu metodla taskları almıyoruz. db.tasks ile taskları çağırıyoruz
+  Future<List<Task>> _getTasks() async {
+    log("getting tasks list");
+    final db = await database;
+    
+    //Taskları databaseten getir
+    final taskMaps = await db.query('Task');
+
+    List<Task> tasks = [];
+    log("getting tasks list 2");
+    for (var taskMap in taskMaps) {
+      log("getting tasks list loop");
+      final task = Task.fromMap(taskMap);
+
+      // İlgili taskID'ye ait reminder'ları al
+      final reminderMaps = await db.query(
+        'Reminder',
+        where: 'taskID = ?',
+        whereArgs: [task.taskID],
+      );
+
+      // Reminderları Task objesine ata
+      task.reminders = reminderMaps.map((rMap) => Reminder.fromMap(rMap)).toList();
+
+      tasks.add(task);
+    }
+    log("getting tasks list done");
+    return tasks;
+  }
+
   Future<List<Task>> getTaskOrderedByDueDate({bool ascending = true}) async {
     final db = await database;
     final order = ascending ? "ASC" : "DESC";
 
     final List<Map<String, dynamic>> maps = await db.query(
-        'Task'
-        orderby: 'dueDateTime $order',
+        'Task',
+        orderBy: 'dueDateTime $order',
       
     );
 
@@ -62,67 +167,5 @@ extension TaskOperations on DatabaseHelper {
     return List.generate(maps.length, (i) => Task.fromMap(maps[i]));
 }
 
-  
-}
 
-class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
-  DatabaseHelper._internal();
-
-  static Database? _database;
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
-
-  Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'thereminder.db');
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
-  }
-
-  Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE User (
-        userID INTEGER PRIMARY KEY,
-        username TEXT NOT NULL,
-        createdAt TEXT NOT NULL,
-        profileID INTEGER
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE AccessibilityProfile (
-        profileID INTEGER PRIMARY KEY,
-        userID INTEGER NOT NULL,
-        defaultReminderType TEXT,
-        screenReaderSupport INTEGER DEFAULT 0,
-        highContrastEnabled INTEGER DEFAULT 0,
-        fontSize INTEGER,
-        FOREIGN KEY (userID) REFERENCES User(userID)
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE Task (
-        taskID INTEGER PRIMARY KEY AUTOINCREMENT,
-        userID INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT,
-        dueDateTime TEXT NOT NULL,
-        isCompleted INTEGER DEFAULT 0,
-        priority TEXT,
-        reminder TEXT, -- multivalued (e.g., 'audio,vibration')
-        FOREIGN KEY (userID) REFERENCES User(userID)
-      );
-    ''');
-  }
 }
