@@ -10,11 +10,11 @@
 
 | Team Member         | Contribution                                                                 |
 |---------------------|-------------------------------------------------------------------------------|
-| **Feyza Coşkun**     | Initial setup of the database schema and table creation (15 June 2025)       |
-| **Taha Mert Ağım**   | Integrated base reminder logic into the task model (20 June 2025)            |
-| **Talha Akbulut**    | Finalized `Priority` enum and data serialization methods (25 June 2025)      |
-| **Beyzanur Zeybek**  | Connected database helper functions to the home screen (28 June 2025)        |
-| **Özge Doğan**       | Polished UI, added drawer and app bar, handled basic logging (1 July 2025)   |
+| **Feyza Coşkun**     | Initial setup of the database schema and table creation                      |
+| **Taha Mert Ağım**   | Integrated base reminder logic into the task model                           |
+| **Talha Akbulut**    | Finalized `Priority` enum and data serialization methods                     |
+| **Beyzanur Zeybek**  | Connected database helper functions to the home screen                       |
+| **Özge Doğan**       | Polished UI, added drawer and app bar, handled basic logging                 |
 
 ---
 
@@ -23,7 +23,7 @@
 | Section                                      | Responsible Member(s)                 |
 |---------------------------------------------|----------------------------------------|
 | 1. System Overview                          | All team members                       |
-| 2. System Context                           | Talha Akbulut                          |
+| 2. System Context                           | Taha Mert Ağım                         |
 | 3. Key Features and Functionality           | Feyza Coşkun                           |
 | 4. Assumptions and Dependencies             | Özge Doğan                             |
 | 5. Architectural Design                     | Feyza Coşkun, Beyzanur Zeybek          |
@@ -34,7 +34,7 @@
 |10. User Interface Design                    | Özge Doğan, Taha Mert Ağım             |
 |11. External Interfaces                      | Özge Doğan                             |
 |12. Software Interfaces                      | Talha Akbulut                          |
-|13. Error Handling and Logging               | Talha Akbulut                          |
+|13. Error Handling and Logging               | Feyza Coşkun                           |
 |14. Design for Testability                   | Beyzanur Zeybek                        |
 |15. Deployment and Installation Design       | Feyza Coşkun                           |
 |16. Change Log                               | All team members                       |
