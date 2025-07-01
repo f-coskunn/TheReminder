@@ -16,14 +16,14 @@
 ## Project Structure
 
 lib/
-├── models/ # Data models (e.g. Reminder)
-├── db/ # SQLite helper and initialization
-│ └── database_helper.dart
-├── screens/ # UI screens
-│ └── home_screen.dart
-├── utils/ # Utility functions (e.g. singleton)
-│ └── singleton.dart
-├── main.dart # Entry point of the app
+├── models/ # Data models (e.g. Reminder)  
+├── db/ # SQLite helper and initialization  
+│ └── database_helper.dart  
+├── screens/ # UI screens  
+│ └── home_screen.dart  
+├── utils/ # Utility functions (e.g. singleton)  
+│ └── singleton.dart  
+├── main.dart # Entry point of the app  
 
 
 ##  Getting Started
