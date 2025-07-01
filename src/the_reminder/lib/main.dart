@@ -5,7 +5,7 @@ import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
 import 'package:the_reminder/screens/homescreen.dart';
-import 'package:the_reminder/temp_singleton.dart';
+//import 'package:the_reminder/temp_singleton.dart';
 
 void main() {
   runApp(const MainApp());
@@ -20,6 +20,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   late List<Task> tasks;
+  late DatabaseHelper db;
 
   @override
   void initState() {
@@ -28,15 +29,16 @@ class _MainAppState extends State<MainApp> {
   }
 
   Future<void> _initApp() async {
-    await DatabaseHelper().database;
-    tasks = TaskSingleton().tasks;
+    db = DatabaseHelper.instance;
+    tasks = await db.tasks;
     setState(() {});
   }
 
-  void refreshState() {
-    log("Refreshing state after task creation");
-    setState(() {
-      tasks = TaskSingleton().tasks;
+  void refreshState() async{
+    await db.tasks.then((t){
+      setState(() {
+        tasks=t;
+      });
     });
   }
 
@@ -48,7 +50,7 @@ class _MainAppState extends State<MainApp> {
         drawer: const ReminderAppDrawer(),
         floatingActionButton: TaskFloatingActionButton(callback: refreshState),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: const HomeScreen(),
+        body: HomeScreen(),
       ),
     );
   }

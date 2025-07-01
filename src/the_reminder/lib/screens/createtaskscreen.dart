@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
-import 'package:the_reminder/temp_singleton.dart';
+//import 'package:the_reminder/temp_singleton.dart';
 
 class CreatetaskScreen extends StatelessWidget {
   const CreatetaskScreen({super.key});
@@ -23,7 +24,8 @@ class CreateTask extends StatefulWidget {
 }
 
 class _CreateTaskState extends State<CreateTask> {
-  var description,date;
+  var description,date,title;
+  DatabaseHelper db = DatabaseHelper.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,15 @@ class _CreateTaskState extends State<CreateTask> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          //Title inputu al
+          TextField(
+            onChanged: (value){
+              setState(() {
+                title=value;
+              });
+            },
+          ),
+          //Descriptipn inputu al
           TextField(
             onChanged: (value){
               setState(() {
@@ -38,6 +49,8 @@ class _CreateTaskState extends State<CreateTask> {
               });
             },
           ),
+          //dudatetime inputu al
+          //TODO: bu değiştirilcek
           TextField(
             onChanged: (value){
               setState(() {
@@ -58,7 +71,7 @@ class _CreateTaskState extends State<CreateTask> {
                 onPressed: (){
                   //Listeye ekle
                   if(description!=null && date!=null){
-                    TaskSingleton().addTask(Task(description:description,reminder:date));
+                    db.addTask(Task(description:description,dueDateTime:date, title:title));
                     Navigator.pop(context);
                   }
                   
