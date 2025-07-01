@@ -32,6 +32,37 @@ extension TaskOperations on DatabaseHelper {
       whereArgs: [id],
     );
   }
+  Future<List<Task>> getTaskOrderedByDueDate({bool ascending = true}) async {
+    final db = await database;
+    final order = ascending ? "ASC" : "DESC";
+
+    final List<Map<String, dynamic>> maps = await db.query(
+        'Task'
+        orderby: 'dueDateTime $order',
+      
+    );
+
+     return List.generate(maps.length, (i) => Task.fromMap(maps[i]));
+  }
+  Future<List<Task>> getTasksOrderedByPriorityThenDueDate() async {
+    final db = await database;
+  
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT * FROM Task
+      ORDER BY 
+        CASE priority
+          WHEN 'High' THEN 1
+          WHEN 'Medium' THEN 2
+          WHEN 'Low' THEN 3
+          ELSE 4
+        END,
+        dueDateTime ASC
+    ''');
+  
+    return List.generate(maps.length, (i) => Task.fromMap(maps[i]));
+}
+
+  
 }
 
 class DatabaseHelper {
