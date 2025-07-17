@@ -55,8 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         });
                       }
                     ),
-                    title: Text(task.description),
-                    subtitle: Text(task.dueDateTime),
+                    title: Text(task.title ?? 'No Title'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(task.description),
+                        Text(task.dueDateTime),
+                      ],
+                    ),
                     //Taskı sil
                     trailing: IconButton(
                       color: Colors.red,

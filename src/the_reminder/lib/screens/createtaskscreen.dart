@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
@@ -24,8 +26,37 @@ class CreateTask extends StatefulWidget {
 }
 
 class _CreateTaskState extends State<CreateTask> {
-  var description,date,title;
+  var description="",date,title;
   DatabaseHelper db = DatabaseHelper.instance;
+
+  Future _selectDateTime() async{
+    DateTime?selectedDate = await _selectDate();
+    log(selectedDate.toString());
+    if (selectedDate==null) return;
+    
+    TimeOfDay? td = await _selectTime();
+    log(td.toString());
+    if (td==null) return;
+
+    DateTime final_date =DateTime(
+      selectedDate!.year,selectedDate!.month,selectedDate!.day,td.hour,td.minute
+    );
+    setState(() {
+      date = final_date.toString();
+    });
+  }
+
+  Future<DateTime?> _selectDate()=> showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+  Future<TimeOfDay?> _selectTime()=> showTimePicker(
+      context: context, 
+      initialTime: TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute));
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,31 +65,45 @@ class _CreateTaskState extends State<CreateTask> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           //Title inputu al
-          TextField(
-            onChanged: (value){
-              setState(() {
-                title=value;
-              });
-            },
+          Text("Title"),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              onChanged: (value){
+                setState(() {
+                  title=value;
+                });
+              },
+            ),
           ),
           //Descriptipn inputu al
-          TextField(
-            onChanged: (value){
-              setState(() {
-                description=value;
-              });
-            },
+          Text("Description"),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              onChanged: (value){
+                setState(() {
+                  description=value;
+                });
+              },
+            ),
           ),
-          //dudatetime inputu al
-          //TODO: bu değiştirilcek
-          TextField(
-            onChanged: (value){
-              setState(() {
-                date=value;
-              });
-            },
+          //add reminder
 
+          //due date time inputu al
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              //Date input
+              ElevatedButton(
+                onPressed: (){
+                  _selectDateTime();
+                }, 
+                child:date==null? Text("Pick a date"):Text(date)
+              ),
+            ],
           ),
+          
           //Geri ve task ekle tuşları
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -70,7 +115,8 @@ class _CreateTaskState extends State<CreateTask> {
               ElevatedButton(
                 onPressed: (){
                   //Listeye ekle
-                  if(description!=null && date!=null){
+                  if(description!=title){
+                    log("${title}\n${description}\n${date}");
                     db.addTask(Task(description:description,dueDateTime:date, title:title));
                     Navigator.pop(context);
                   }
