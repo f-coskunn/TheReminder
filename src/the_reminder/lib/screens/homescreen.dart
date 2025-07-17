@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
+import 'package:the_reminder/services/simple_timer_notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -67,9 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     trailing: IconButton(
                       color: Colors.red,
                       //TODO:Taskı databaseten de sil
-                      onPressed:() =>setState(() {
-                        db.deleteTask(task.taskID??=0);
-                      }), 
+                      onPressed:() async {
+                        setState(() {
+                          db.deleteTask(task.taskID??=0);
+                        });
+                        // Cancel notification for deleted task
+                        await SimpleTimerNotificationService().cancelTaskNotification(task.taskID ?? 0);
+                      }, 
                       icon: Icon(Icons.delete)
                     ),
                   );

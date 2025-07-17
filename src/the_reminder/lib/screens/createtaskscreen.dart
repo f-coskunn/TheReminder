@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
+import 'package:the_reminder/services/simple_timer_notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 class CreatetaskScreen extends StatelessWidget {
@@ -113,12 +114,23 @@ class _CreateTaskState extends State<CreateTask> {
                 child: Text("Back")
               ),
               ElevatedButton(
-                onPressed: (){
+                onPressed: () async {
                   //Listeye ekle
-                  if(description!=title){
-                    log("${title}\n${description}\n${date}");
-                    db.addTask(Task(description:description,dueDateTime:date, title:title));
+                  if(description != null && title != null && date != null){
+                    log("Creating task: ${title}\n${description}\n${date}");
+                    final task = Task(description: description, dueDateTime: date, title: title);
+                    await db.addTask(task);
+                    
+                    log("Task created with ID: ${task.taskID}");
+                    log("Scheduling notification for: ${task.dueDateTime}");
+                    
+                    // Schedule notification for the task
+                    await SimpleTimerNotificationService().scheduleTaskNotification(task);
+                    
+                    log("Task creation completed");
                     Navigator.pop(context);
+                  } else {
+                    log("Missing required fields: title=$title, description=$description, date=$date");
                   }
                   
                 }, 

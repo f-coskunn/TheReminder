@@ -5,6 +5,8 @@ import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
 import 'package:the_reminder/screens/homescreen.dart';
+import 'package:the_reminder/screens/settingsscreen.dart';
+import 'package:the_reminder/services/simple_timer_notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 void main() {
@@ -31,7 +33,28 @@ class _MainAppState extends State<MainApp> {
   Future<void> _initApp() async {
     db = DatabaseHelper.instance;
     tasks = await db.tasks;
+    
+    // Initialize notification service
+    await SimpleTimerNotificationService().initialize();
+    
+    // Reschedule notifications for existing tasks
+    await _rescheduleNotifications();
+    
     setState(() {});
+  }
+
+  Future<void> _rescheduleNotifications() async {
+    try {
+      final allTasks = await db.tasks;
+      for (final task in allTasks) {
+        if (!task.isCompleted) {
+          await SimpleTimerNotificationService().scheduleTaskNotification(task);
+        }
+      }
+      log('Rescheduled notifications for ${allTasks.length} tasks');
+    } catch (e) {
+      log('Error rescheduling notifications: $e');
+    }
   }
 
   void refreshState() async{
@@ -67,7 +90,10 @@ class ReminderAppDrawer extends StatelessWidget {
           children: [
             ListTile(
               onTap: () {
-                log("Tap on settings");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
               },
               title: const Text("Settings"),
               trailing: const Icon(Icons.settings),
