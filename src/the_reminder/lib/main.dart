@@ -33,12 +33,17 @@ class _MainAppState extends State<MainApp> {
   Future<void> _initApp() async {
     db = DatabaseHelper.instance;
     tasks = await db.tasks;
+
+    final notificationService = NotificationService(); // Initialize notification service
+    await notificationService.initialize();
+    await notificationService.rescheduleAllTasks(tasks); // Reschedule notifications for existing tasks
     
-    // Initialize notification service
-    await SimpleTimerNotificationService().initialize();
     
-    // Reschedule notifications for existing tasks
-    await _rescheduleNotifications();
+    
+    //await SimpleTimerNotificationService().initialize();
+    
+    
+    //await _rescheduleNotifications();
     
     setState(() {});
   }
