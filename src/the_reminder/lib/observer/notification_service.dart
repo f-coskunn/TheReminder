@@ -78,7 +78,15 @@ class NotificationService {
     _taskSubject.dispose();
     log('NotificationService disposed');
   }
-
+  // Rescheduling Tasks (When app restarted, it reschedules the tasks depending on their due dates)
+  Future<void> rescheduleAllTasks(List<Task> allTasks) async {
+      for(final task in allTasks) {
+        final dueDate = DateTime.parse(task.dueDateTime);
+        if(dueDate.isAfter(DateTime.now()) {
+            await scheduleTaskNotification(task);
+        }  
+      }
+  }
   // Get the task subject for direct access if needed
   TaskSubject get taskSubject => _taskSubject;
 } 
