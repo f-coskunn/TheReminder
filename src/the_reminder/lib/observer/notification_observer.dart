@@ -1,8 +1,7 @@
 import 'dart:developer';
 import 'observer.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
 
 // Concrete implementation of Observer for phone notifications
 class NotificationObserver implements Observer {
@@ -13,9 +12,6 @@ class NotificationObserver implements Observer {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Initialize timezone data
-    tz.initializeTimeZones();
-
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings();
     
@@ -25,114 +21,19 @@ class NotificationObserver implements Observer {
     );
 
     await _notifications.initialize(initSettings);
+    
+    // Request permissions
+    await requestPermissions();
+    
     _isInitialized = true;
-    log('Notification system initialized');
-  }
-
-  @override
-  void update(String message, Map<String, dynamic> data) {
-    if (!_isInitialized) {
-      initialize().then((_) => _showNotification(message, data));
-    } else {
-      _showNotification(message, data);
-    }
-  }
-
-  // Schedule a notification for a specific time
-  Future<void> scheduleNotification(DateTime scheduledTime, Map<String, dynamic> data) async {
-    if (!_isInitialized) {
-      await initialize();
-    }
-
-    final taskTitle = data['title'] ?? 'Task Reminder';
-    final taskDescription = data['description'] ?? '';
-    final taskId = data['taskID'] ?? 0;
-
-    const androidDetails = AndroidNotificationDetails(
-      'task_reminders',
-      'Task Reminders',
-      channelDescription: 'Notifications for task reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      enableVibration: true,
-      playSound: true,
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _notifications.zonedSchedule(
-      taskId,
-      taskTitle,
-      taskDescription,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      details,
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-
-    log('Scheduled notification for task $taskId at $scheduledTime');
-  }
-
-  // Cancel a scheduled notification
-  Future<void> cancelNotification(int taskId) async {
-    await _notifications.cancel(taskId);
-    log('Cancelled notification for task $taskId');
-  }
-
-  void _showNotification(String message, Map<String, dynamic> data) {
-    final taskTitle = data['title'] ?? 'Task Reminder';
-    final taskDescription = data['description'] ?? '';
-    final taskId = data['taskID'] ?? 0;
-
-    const androidDetails = AndroidNotificationDetails(
-      'task_reminders',
-      'Task Reminders',
-      channelDescription: 'Notifications for task reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      enableVibration: true,
-      playSound: true,
-    );
-
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    _notifications.show(
-      taskId,
-      taskTitle,
-      taskDescription,
-      details,
-    );
-
-    log('Notification sent: $message for task $taskId');
+    log('NotificationObserver initialized');
   }
 
   // Request notification permissions
   Future<bool> requestPermissions() async {
-    if (!_isInitialized) {
-      await initialize();
-    }
-
     final androidGranted = await _notifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestPermission();
+        ?.requestNotificationsPermission();
 
     final iosGranted = await _notifications
         .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
@@ -142,6 +43,122 @@ class NotificationObserver implements Observer {
           sound: true,
         );
 
-    return (androidGranted ?? false) || (iosGranted ?? false);
+    final hasPermission = (androidGranted ?? false) || (iosGranted ?? false);
+    log('Notification permissions granted: $hasPermission');
+    return hasPermission;
+  }
+
+  @override
+  void update(String message, Map<String, dynamic> data) {
+    log('NotificationObserver received update: $message');
+    
+    if (!_isInitialized) {
+      initialize().then((_) => _handleUpdate(message, data));
+    } else {
+      _handleUpdate(message, data);
+    }
+  }
+
+  void _handleUpdate(String message, Map<String, dynamic> data) {
+    switch (message) {
+      case 'TASK_DUE':
+        _showTaskDueNotification(data);
+        break;
+      case 'TASK_OVERDUE':
+        _showTaskOverdueNotification(data);
+        break;
+      case 'TASK_ERROR':
+        _showTaskErrorNotification(data);
+        break;
+      default:
+        log('Unknown message type: $message');
+    }
+  }
+
+  void _showTaskDueNotification(Map<String, dynamic> data) {
+    final title = data['title'] ?? 'Task Due';
+    final description = data['description'] ?? '';
+    final taskId = data['taskID'] ?? 0;
+
+    _showNotification(
+      taskId,
+      title,
+      description,
+      Colors.blue,
+    );
+  }
+
+  void _showTaskOverdueNotification(Map<String, dynamic> data) {
+    final title = data['title'] ?? 'Task Overdue';
+    final description = data['description'] ?? '';
+    final taskId = data['taskID'] ?? 0;
+
+    _showNotification(
+      taskId,
+      '$title (OVERDUE)',
+      description,
+      Colors.red,
+    );
+  }
+
+  void _showTaskErrorNotification(Map<String, dynamic> data) {
+    final title = data['title'] ?? 'Task Error';
+    final description = data['description'] ?? '';
+    final taskId = data['taskID'] ?? 0;
+
+    _showNotification(
+      taskId,
+      '$title (ERROR)',
+      description,
+      Colors.orange,
+    );
+  }
+
+  void _showNotification(int id, String title, String body, Color color) {
+    const androidDetails = AndroidNotificationDetails(
+      'task_reminders',
+      'Task Reminders',
+      channelDescription: 'Notifications for task reminders',
+      importance: Importance.high,
+      enableVibration: true,
+      playSound: true,
+      icon: '@mipmap/ic_launcher',
+      color: Colors.blue,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    _notifications.show(id, title, body, details);
+    log('Notification sent: $title');
+  }
+
+  // Show an immediate notification (for testing)
+  Future<void> showImmediateNotification(String title, String body) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    _showNotification(999, title, body, Colors.blue);
+  }
+
+  // Cancel a specific notification
+  Future<void> cancelNotification(int taskId) async {
+    await _notifications.cancel(taskId);
+    log('Cancelled notification for task: $taskId');
+  }
+
+  // Cancel all notifications
+  Future<void> cancelAllNotifications() async {
+    await _notifications.cancelAll();
+    log('Cancelled all notifications');
   }
 } 

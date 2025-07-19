@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:the_reminder/services/simple_timer_notification_service.dart';
+import 'package:the_reminder/services/notification_service.dart';
 import 'package:the_reminder/model/task_model.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
                           ElevatedButton(
                 onPressed: () async {
-                  await SimpleTimerNotificationService().showImmediateNotification(
+                  await NotificationService().showImmediateNotification(
                     'Test Notification',
                     'This is a test notification to verify the system is working.',
                   );
@@ -45,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   dueDateTime: DateTime.now().add(const Duration(seconds: 10)).toString(),
                 );
                 
-                await SimpleTimerNotificationService().scheduleTaskNotification(testTask);
+                await NotificationService().scheduleTaskNotification(testTask);
                 print('Scheduled test notification for 10 seconds from now');
               },
               child: const Text('Test Scheduled Notification (10 seconds)'),
@@ -58,22 +58,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () async {
-                final pending = await SimpleTimerNotificationService().getPendingNotifications();
-                final activeTimers = SimpleTimerNotificationService().getActiveTimerCount();
-                print('=== PENDING NOTIFICATIONS ===');
-                print('Total pending: ${pending.length}');
+                final activeTimers = NotificationService().getActiveTimerCount();
+                print('=== ACTIVE TIMERS ===');
                 print('Active timers: $activeTimers');
-                for (var notification in pending) {
-                  print('ID: ${notification.id}, Title: ${notification.title}');
-                }
                 print('=============================');
               },
-              child: const Text('Check Pending Notifications'),
+              child: const Text('Check Active Timers'),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () async {
-                await SimpleTimerNotificationService().cancelAllNotifications();
+                await NotificationService().cancelAllNotifications();
                 print('All notifications cancelled');
               },
               child: const Text('Cancel All Notifications'),

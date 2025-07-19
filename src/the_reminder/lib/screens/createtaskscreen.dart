@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
-import 'package:the_reminder/services/simple_timer_notification_service.dart';
+import 'package:the_reminder/services/notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 class CreatetaskScreen extends StatelessWidget {
@@ -125,7 +125,7 @@ class _CreateTaskState extends State<CreateTask> {
                     log("Scheduling notification for: ${task.dueDateTime}");
                     
                     // Schedule notification for the task
-                    await SimpleTimerNotificationService().scheduleTaskNotification(task);
+                    await NotificationService().scheduleTaskNotification(task);
                     
                     log("Task creation completed");
                     Navigator.pop(context);

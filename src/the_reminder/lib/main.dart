@@ -6,7 +6,7 @@ import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
 import 'package:the_reminder/screens/homescreen.dart';
 import 'package:the_reminder/screens/settingsscreen.dart';
-import 'package:the_reminder/services/simple_timer_notification_service.dart';
+import 'package:the_reminder/services/notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 void main() {
@@ -33,17 +33,12 @@ class _MainAppState extends State<MainApp> {
   Future<void> _initApp() async {
     db = DatabaseHelper.instance;
     tasks = await db.tasks;
-
-    final notificationService = NotificationService(); // Initialize notification service
-    await notificationService.initialize();
-    await notificationService.rescheduleAllTasks(tasks); // Reschedule notifications for existing tasks
     
+    // Initialize notification service
+    await NotificationService().initialize();
     
-    
-    //await SimpleTimerNotificationService().initialize();
-    
-    
-    //await _rescheduleNotifications();
+    // Reschedule notifications for existing tasks
+    await _rescheduleNotifications();
     
     setState(() {});
   }
@@ -51,12 +46,24 @@ class _MainAppState extends State<MainApp> {
   Future<void> _rescheduleNotifications() async {
     try {
       final allTasks = await db.tasks;
+      int scheduledCount = 0;
+      
       for (final task in allTasks) {
         if (!task.isCompleted) {
-          await SimpleTimerNotificationService().scheduleTaskNotification(task);
+          // Check if the task is in the future
+          final dueDateTime = DateTime.parse(task.dueDateTime);
+          final now = DateTime.now();
+          
+          if (dueDateTime.isAfter(now)) {
+            await NotificationService().scheduleTaskNotification(task);
+            scheduledCount++;
+            log('Rescheduled notification for future task: ${task.title} at ${dueDateTime}');
+          } else {
+            log('Skipped overdue task: ${task.title} (was due at ${dueDateTime})');
+          }
         }
       }
-      log('Rescheduled notifications for ${allTasks.length} tasks');
+      log('Rescheduled notifications for $scheduledCount future tasks out of ${allTasks.length} total tasks');
     } catch (e) {
       log('Error rescheduling notifications: $e');
     }
