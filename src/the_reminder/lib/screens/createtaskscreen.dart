@@ -119,7 +119,8 @@ class _CreateTaskState extends State<CreateTask> {
                   if(description != null && title != null && date != null){
                     log("Creating task: ${title}\n${description}\n${date}");
                     final task = Task(description: description, dueDateTime: date, title: title);
-                    await db.addTask(task);
+                    int id = await db.addTask(task);
+                    task.taskID=id;
                     
                     log("Task created with ID: ${task.taskID}");
                     log("Scheduling notification for: ${task.dueDateTime}");

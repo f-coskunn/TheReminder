@@ -43,7 +43,6 @@ class TaskSubject implements Subject {
     try {
       final dueDateTime = DateTime.parse(task.dueDateTime);
       final taskId = task.taskID ?? 0;
-      
       // Check if the time is in the past
       if (dueDateTime.isBefore(DateTime.now())) {
         log('Task time is in the past, skipping notification for: ${task.title}');
@@ -98,18 +97,20 @@ class TaskSubject implements Subject {
   }
 
   // Cancel a scheduled task
-  void cancelTask(int taskId) {
+  void cancelTask(int taskId) async{
     _timers[taskId]?.cancel();
     _timers.remove(taskId);
     log('Cancelled task: $taskId. Active timers: ${_timers.length}');
+    
   }
 
   // Cancel all scheduled tasks
-  void cancelAllTasks() {
+  void cancelAllTasks() async{
     for (var timer in _timers.values) {
       timer.cancel();
     }
     _timers.clear();
+    
     log('Cancelled all tasks');
   }
 

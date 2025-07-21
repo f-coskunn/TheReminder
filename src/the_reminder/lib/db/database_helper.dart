@@ -65,7 +65,7 @@ class DatabaseHelper {
     return db;
   }
 
-  Future<void> addTask(Task task) async{
+  Future<int> addTask(Task task) async{
     final db = await database;
     log("adding task");log(task.toString());
     //Task insert ediliyor
@@ -83,7 +83,7 @@ class DatabaseHelper {
         await db.insert("Reminder", r.toMap());
       }
     }
-    
+    return id;
   }
 
   Future<void> deleteTask(int taskID) async{
