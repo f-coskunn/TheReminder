@@ -1,13 +1,20 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 import 'observer.dart';
 import 'subject.dart';
 import '../model/task_model.dart';
+
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 // Concrete implementation of Subject for tasks
 class TaskSubject implements Subject {
   final List<Observer> _observers = [];
   final Map<int, Timer> _timers = {};
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void attach(Observer observer) {
@@ -32,7 +39,7 @@ class TaskSubject implements Subject {
   }
 
   // Schedule a task and notify observers when time comes
-  void scheduleTask(Task task) {
+  void scheduleTask(Task task) async{
     try {
       final dueDateTime = DateTime.parse(task.dueDateTime);
       final taskId = task.taskID ?? 0;
@@ -59,6 +66,28 @@ class TaskSubject implements Subject {
         notify('TASK_DUE', _createTaskData(task));
         _timers.remove(taskId);
       });
+
+      tz.initializeTimeZones();
+      tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
+
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        0,
+        'scheduled title',
+        'scheduled body',
+        tz.TZDateTime.now(tz.local).add(delay),
+        const NotificationDetails(
+            android: AndroidNotificationDetails(
+            'task_reminders',
+            'Task Reminders',
+            channelDescription: 'Notifications for task reminders',
+            importance: Importance.high,
+            enableVibration: true,
+            playSound: true,
+            icon: '@mipmap/ic_launcher',
+            color: Colors.blue,
+          )
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
       
       log('Task scheduled successfully. Active timers: ${_timers.length}');
       
