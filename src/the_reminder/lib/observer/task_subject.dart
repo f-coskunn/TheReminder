@@ -71,9 +71,9 @@ class TaskSubject implements Subject {
       tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
-        0,
-        'scheduled title',
-        'scheduled body',
+        taskId, // Use taskId instead of 0 for uniqueness
+        task.title ?? 'Task Reminder',
+        task.description ?? 'You have a task due.',
         tz.TZDateTime.now(tz.local).add(delay),
         const NotificationDetails(
             android: AndroidNotificationDetails(
