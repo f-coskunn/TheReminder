@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
@@ -10,6 +11,10 @@ import 'package:the_reminder/services/notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 void main() {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+  flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+    AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
   runApp(const MainApp());
 }
 
