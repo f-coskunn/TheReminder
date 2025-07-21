@@ -1,11 +1,16 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:the_reminder/db/database_helper.dart';
+import 'package:the_reminder/db/settings_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/screens/createtaskscreen.dart';
 import 'package:the_reminder/screens/homescreen.dart';
+import 'package:the_reminder/screens/settingsscreen.dart';
+import 'package:the_reminder/widgets/accessible_contrast_decorator.dart';
+import 'package:the_reminder/widgets/accessible_font_decorator.dart';
 import 'package:the_reminder/screens/settingsscreen.dart';
 import 'package:the_reminder/services/notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
@@ -30,7 +35,7 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   late List<Task> tasks;
   late DatabaseHelper db;
-
+  Map settings = {};
   @override
   void initState() {
     super.initState();
@@ -40,6 +45,8 @@ class _MainAppState extends State<MainApp> {
   Future<void> _initApp() async {
     db = DatabaseHelper.instance;
     tasks = await db.tasks;
+    getSettings();
+    log("settings:${settings.toString()}");
     
     // Initialize notification service
     await NotificationService().initialize();
@@ -48,6 +55,13 @@ class _MainAppState extends State<MainApp> {
     await _rescheduleNotifications();
     
     setState(() {});
+  }
+  Future<void> getSettings() async {
+    var s = await SettingsHelper.readData();
+    setState(() {
+      settings = s;
+      log(settings.toString());
+    });
   }
 
   Future<void> _rescheduleNotifications() async {
@@ -83,17 +97,35 @@ class _MainAppState extends State<MainApp> {
       });
     });
   }
+  //TODO: change this to fontsize
+  Widget _home(){
+    Widget h = _homeScaffold();
+    if(settings["fontSize"]!=null){
+      return FontDecorator(_homeScaffold(),fontSize: settings["fontSize"],);
+    }
+    return _homeScaffold();
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
+  Widget _homeScaffold(){
+    return Scaffold(
         appBar: const ReminderAppBar(),
         drawer: const ReminderAppDrawer(),
         floatingActionButton: TaskFloatingActionButton(callback: refreshState),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: HomeScreen(),
-      ),
+        body: HomeScreen() ,//HomeScreen(),
+      );
+  }
+
+  //Theme decorator
+  Widget _decoratedScaffold(){
+    if(settings["isContrastEnabled"]!=null && settings["isContrastEnabled"])
+    {return ContrastDecorator(_home());}
+    return _home();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: _decoratedScaffold()
     );
   }
 }
@@ -110,9 +142,12 @@ class ReminderAppDrawer extends StatelessWidget {
             ListTile(
               onTap: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                );
+                  context, 
+                  MaterialPageRoute(builder: (context) => SettingsScreen())
+                ).then((_){
+                  (context.findAncestorStateOfType<_MainAppState>())?.getSettings();
+                });
+                
               },
               title: const Text("Settings"),
               trailing: const Icon(Icons.settings),

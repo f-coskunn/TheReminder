@@ -1,19 +1,53 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:the_reminder/db/database_helper.dart';
+import 'package:the_reminder/db/settings_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/services/notification_service.dart';
+import 'package:the_reminder/widgets/accessible_font_decorator.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
-class CreatetaskScreen extends StatelessWidget {
+class CreatetaskScreen extends StatefulWidget {
   const CreatetaskScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<CreatetaskScreen> createState() => _CreatetaskScreenState();
+}
+
+class _CreatetaskScreenState extends State<CreatetaskScreen> {
+  late Map settings={};
+  @override
+  void initState() {
+    super.initState();
+    _getSettings();
+  }
+  Future<void> _getSettings() async {
+    var s = await SettingsHelper.readData();
+    setState(() {
+      settings = s;
+      log(settings.toString());
+    });
+  }
+
+  Widget _getScaffold(){
+    if(settings["fontSize"]!=null){
+      return FontDecorator(
+        Scaffold(
+          body: CreateTask(),
+        ),
+        fontSize: settings["fontSize"],
+      );
+    }
     return Scaffold(
-      body: CreateTask(),
-    );
+        body: CreateTask(),
+      );
+  }
+ 
+  @override
+  Widget build(BuildContext context) {
+    return _getScaffold();
   }
 }
 
@@ -29,6 +63,8 @@ class CreateTask extends StatefulWidget {
 class _CreateTaskState extends State<CreateTask> {
   var description="",date,title;
   DatabaseHelper db = DatabaseHelper.instance;
+
+  //Check for accessibility settings and decorate accordingly
 
   Future _selectDateTime() async{
     DateTime?selectedDate = await _selectDate();
