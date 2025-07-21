@@ -1,0 +1,221 @@
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:the_reminder/db/database_helper.dart';
+import 'package:the_reminder/db/settings_helper.dart';
+import 'package:the_reminder/model/task_model.dart';
+import 'package:the_reminder/services/notification_service.dart';
+import 'package:the_reminder/widgets/accessible_font_decorator.dart';
+
+class EditTaskScreen extends StatefulWidget {
+  final Task task;
+  
+  const EditTaskScreen({
+    super.key,
+    required this.task,
+  });
+
+  @override
+  State<EditTaskScreen> createState() => _EditTaskScreenState();
+}
+
+class _EditTaskScreenState extends State<EditTaskScreen> {
+  late Map settings = {};
+  
+  @override
+  void initState() {
+    super.initState();
+    _getSettings();
+  }
+  
+  Future<void> _getSettings() async {
+    var s = await SettingsHelper.readData();
+    setState(() {
+      settings = s;
+      log(settings.toString());
+    });
+  }
+
+  Widget _getScaffold() {
+    if (settings["fontSize"] != null) {
+      return FontDecorator(
+        Scaffold(
+          body: EditTask(task: widget.task),
+        ),
+        fontSize: settings["fontSize"],
+      );
+    }
+    return Scaffold(
+      body: EditTask(task: widget.task),
+    );
+  }
+ 
+  @override
+  Widget build(BuildContext context) {
+    return _getScaffold();
+  }
+}
+
+class EditTask extends StatefulWidget {
+  final Task task;
+  
+  const EditTask({
+    super.key,
+    required this.task,
+  });
+
+  @override
+  State<EditTask> createState() => _EditTaskState();
+}
+
+class _EditTaskState extends State<EditTask> {
+  late String description;
+  late String date;
+  late String title;
+  DatabaseHelper db = DatabaseHelper.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with existing task data
+    description = widget.task.description ?? "";
+    date = widget.task.dueDateTime ?? "";
+    title = widget.task.title ?? "";
+  }
+
+  Future _selectDateTime() async {
+    DateTime? selectedDate = await _selectDate();
+    log(selectedDate.toString());
+    if (selectedDate == null) return;
+    
+    TimeOfDay? td = await _selectTime();
+    log(td.toString());
+    if (td == null) return;
+
+    DateTime final_date = DateTime(
+      selectedDate!.year, selectedDate!.month, selectedDate!.day, td.hour, td.minute
+    );
+    setState(() {
+      date = final_date.toString();
+    });
+  }
+
+  Future<DateTime?> _selectDate() => showDatePicker(
+    context: context,
+    initialDate: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()),
+    firstDate: DateTime.now(),
+    lastDate: DateTime(2100),
+  );
+
+  Future<TimeOfDay?> _selectTime() => showTimePicker(
+    context: context, 
+    initialTime: TimeOfDay(
+      hour: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()).hour, 
+      minute: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()).minute
+    )
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Title input
+          Text("Title"),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              controller: TextEditingController(text: title),
+              onChanged: (value) {
+                setState(() {
+                  title = value;
+                });
+              },
+            ),
+          ),
+          // Description input
+          Text("Description"),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: TextField(
+              controller: TextEditingController(text: description),
+              onChanged: (value) {
+                setState(() {
+                  description = value;
+                });
+              },
+            ),
+          ),
+          // Due date time input
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  _selectDateTime();
+                }, 
+                child: date == null ? Text("Pick a date") : Text(date)
+              ),
+            ],
+          ),
+          
+          // Back and Update buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context), 
+                child: Text("Cancel")
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Update task
+                  if (description.isNotEmpty && title.isNotEmpty && date.isNotEmpty) {
+                    log("Updating task: ${title}\n${description}\n${date}");
+                    
+                    // Cancel existing notification
+                    await NotificationService().cancelTaskNotification(widget.task.taskID ?? 0);
+                    
+                    // Update task with new data
+                    final updatedTask = Task(
+                      taskID: widget.task.taskID,
+                      description: description, 
+                      dueDateTime: date, 
+                      title: title,
+                      isCompleted: widget.task.isCompleted,
+                      priority: widget.task.priority,
+                    );
+                    
+                    // Update in database
+                    await db.updateTask(updatedTask);
+                    
+                    log("Task updated with ID: ${updatedTask.taskID}");
+                    log("Scheduling new notification for: ${updatedTask.dueDateTime}");
+                    
+                    // Schedule new notification for the updated task
+                    await NotificationService().scheduleTaskNotification(updatedTask);
+                    
+                    log("Task update completed");
+                    Navigator.pop(context);
+                  } else {
+                    log("Missing required fields: title=$title, description=$description, date=$date");
+                    // Show error message to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please fill in all required fields'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }, 
+                child: Text("Update Task")
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+} 

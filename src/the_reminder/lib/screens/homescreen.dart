@@ -8,6 +8,7 @@ import 'package:the_reminder/services/notification_service.dart';
 import 'package:the_reminder/widgets/accessible_font_decorator.dart';
 import 'package:the_reminder/widgets/high_priority_decorator.dart';
 import 'package:the_reminder/widgets/low_priority_decorator.dart';
+import 'package:the_reminder/screens/edittaskscreen.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -69,18 +70,56 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(task.dueDateTime),
                         ],
                       ),
-                      //Taskı sil
-                      trailing: IconButton(
-                        color: Colors.red,
-                        //TODO:Taskı databaseten de sil
-                        onPressed:() async {
-                        setState(() {
-                            db.deleteTask(task.taskID??=0);
+                      // Make the tile tappable to edit
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditTaskScreen(task: task),
+                          ),
+                        ).then((_) {
+                          // Refresh the list when returning from edit screen
+                          setState(() {
+                            tasksFuture = db.tasks;
                           });
-                        // Cancel notification for deleted task
-                        await NotificationService().cancelTaskNotification(task.taskID ?? 0);
-                      }, 
-                        icon: Icon(Icons.delete)
+                        });
+                      },
+                      //Task actions
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Edit button
+                          IconButton(
+                            color: Colors.blue,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditTaskScreen(task: task),
+                                ),
+                              ).then((_) {
+                                // Refresh the list when returning from edit screen
+                                setState(() {
+                                  tasksFuture = db.tasks;
+                                });
+                              });
+                            },
+                            icon: Icon(Icons.edit),
+                          ),
+                          // Delete button
+                          IconButton(
+                            color: Colors.red,
+                            //TODO:Taskı databaseten de sil
+                            onPressed:() async {
+                              setState(() {
+                                db.deleteTask(task.taskID??=0);
+                              });
+                              // Cancel notification for deleted task
+                              await NotificationService().cancelTaskNotification(task.taskID ?? 0);
+                            }, 
+                            icon: Icon(Icons.delete)
+                          ),
+                        ],
                       ),
                     );
                   Widget _getTile(){

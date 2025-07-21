@@ -107,6 +107,28 @@ class DatabaseHelper {
     _tasks?.removeWhere((t) => t.taskID == taskID);
   }
 
+  Future<void> updateTask(Task task) async {
+    final db = await database;
+    
+    // Update the task
+    await db.update(
+      'Task',
+      task.toMap(),
+      where: 'taskID = ?',
+      whereArgs: [task.taskID],
+    );
+
+    // Update cache if it exists
+    if (_tasks != null) {
+      final index = _tasks!.indexWhere((t) => t.taskID == task.taskID);
+      if (index != -1) {
+        _tasks![index] = task;
+      }
+    }
+    
+    log('Task updated: ${task.title}');
+  }
+
   //Bu metodla taskları almıyoruz. db.tasks ile taskları çağırıyoruz
   Future<List<Task>> _getTasks() async {
     log("getting tasks list");
