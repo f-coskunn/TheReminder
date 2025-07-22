@@ -8,22 +8,28 @@ import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/services/notification_service.dart';
 import 'package:the_reminder/widgets/accessible_font_decorator.dart';
 import 'package:the_reminder/widgets/notification_type_selector.dart';
-//import 'package:the_reminder/temp_singleton.dart';
 
-class CreatetaskScreen extends StatefulWidget {
-  const CreatetaskScreen({super.key});
+class EditTaskScreen extends StatefulWidget {
+  final Task task;
+  
+  const EditTaskScreen({
+    super.key,
+    required this.task,
+  });
 
   @override
-  State<CreatetaskScreen> createState() => _CreatetaskScreenState();
+  State<EditTaskScreen> createState() => _EditTaskScreenState();
 }
 
-class _CreatetaskScreenState extends State<CreatetaskScreen> {
-  late Map settings={};
+class _EditTaskScreenState extends State<EditTaskScreen> {
+  late Map settings = {};
+  
   @override
   void initState() {
     super.initState();
     _getSettings();
   }
+  
   Future<void> _getSettings() async {
     var s = await SettingsHelper.readData();
     setState(() {
@@ -32,18 +38,18 @@ class _CreatetaskScreenState extends State<CreatetaskScreen> {
     });
   }
 
-  Widget _getScaffold(){
-    if(settings["fontSize"]!=null){
+  Widget _getScaffold() {
+    if (settings["fontSize"] != null) {
       return FontDecorator(
         Scaffold(
-          body: CreateTask(),
+          body: EditTask(task: widget.task),
         ),
         fontSize: settings["fontSize"],
       );
     }
     return Scaffold(
-        body: CreateTask(),
-      );
+      body: EditTask(task: widget.task),
+    );
   }
  
   @override
@@ -52,93 +58,111 @@ class _CreatetaskScreenState extends State<CreatetaskScreen> {
   }
 }
 
-class CreateTask extends StatefulWidget {
-  const CreateTask({
+class EditTask extends StatefulWidget {
+  final Task task;
+  
+  const EditTask({
     super.key,
+    required this.task,
   });
 
   @override
-  State<CreateTask> createState() => _CreateTaskState();
+  State<EditTask> createState() => _EditTaskState();
 }
 
-class _CreateTaskState extends State<CreateTask> {
-  var description="",date,title;
-  List<NotificationType> selectedNotificationTypes = [NotificationType.Visual];
+class _EditTaskState extends State<EditTask> {
+  late String description;
+  late String date;
+  late String title;
+  late List<NotificationType> selectedNotificationTypes;
+  late Priority priority;
   DatabaseHelper db = DatabaseHelper.instance;
-  Priority? _priority = Priority.Medium;
 
-  //Check for accessibility settings and decorate accordingly
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with existing task data
+    description = widget.task.description ?? "";
+    date = widget.task.dueDateTime ?? "";
+    title = widget.task.title ?? "";
+    selectedNotificationTypes = List.from(widget.task.notificationTypes);
+    priority = widget.task.priority;
+    log("Edit task with values:$description $date $title $priority");
+  }
 
-  Future _selectDateTime() async{
-    DateTime?selectedDate = await _selectDate();
+  Future _selectDateTime() async {
+    DateTime? selectedDate = await _selectDate();
     log(selectedDate.toString());
-    if (selectedDate==null) return;
+    if (selectedDate == null) return;
     
     TimeOfDay? td = await _selectTime();
     log(td.toString());
-    if (td==null) return;
+    if (td == null) return;
 
-    DateTime final_date =DateTime(
-      selectedDate!.year,selectedDate!.month,selectedDate!.day,td.hour,td.minute
+    DateTime final_date = DateTime(
+      selectedDate!.year, selectedDate!.month, selectedDate!.day, td.hour, td.minute
     );
     setState(() {
       date = final_date.toString();
     });
   }
 
-  Future<DateTime?> _selectDate()=> showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
+  Future<DateTime?> _selectDate() => showDatePicker(
+    context: context,
+    initialDate: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()),
+    firstDate: DateTime.now(),
+    lastDate: DateTime(2100),
+  );
 
-  Future<TimeOfDay?> _selectTime()=> showTimePicker(
-      context: context, 
-      initialTime: TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute));
-
+  Future<TimeOfDay?> _selectTime() => showTimePicker(
+    context: context, 
+    initialTime: TimeOfDay(
+      hour: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()).hour, 
+      minute: DateTime.parse(widget.task.dueDateTime ?? DateTime.now().toString()).minute
+    )
+  );
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: ListView(
-        shrinkWrap: true,
         children: [
-          //Title inputu al
+          // Title input
           Text("Title"),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
-              onChanged: (value){
+              controller: TextEditingController(text: title),
+              onChanged: (value) {
                 setState(() {
-                  title=value;
+                  title = value;
                 });
               },
             ),
           ),
-          //Descriptipn inputu al
+          // Description input
           Text("Description"),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
-              onChanged: (value){
+              controller: TextEditingController(text: description),
+              onChanged: (value) {
                 setState(() {
-                  description=value;
+                  description = value;
                 });
               },
             ),
           ),
-
           //add priority
           Text("Priority"),
           ListTile(
             title: const Text('Low'),
             leading: Radio<Priority>(
               value: Priority.Low, 
-              groupValue: _priority, 
+              groupValue: priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  priority = e ?? Priority.Low;
                   log("Priority changed to $e");
                 });
               }
@@ -148,10 +172,10 @@ class _CreateTaskState extends State<CreateTask> {
             title: const Text('Medium'),
             leading: Radio<Priority>(
               value: Priority.Medium, 
-              groupValue: _priority, 
+              groupValue: priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  priority = e ?? Priority.Medium;
                   log("Priority changed to $e");
                 });
               }
@@ -161,28 +185,24 @@ class _CreateTaskState extends State<CreateTask> {
             title: const Text('High'),
             leading: Radio<Priority>(
               value: Priority.High, 
-              groupValue: _priority, 
+              groupValue: priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  priority = e?? Priority.High;
                   log("Priority changed to $e");
                 });
               }
             ),
           ),
-
-          //add reminder
-
-          //due date time inputu al
+          // Due date time input
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              //Date input
               ElevatedButton(
-                onPressed: (){
+                onPressed: () {
                   _selectDateTime();
                 }, 
-                child:date==null? Text("Pick a date"):Text(date)
+                child: date == null ? Text("Pick a date") : Text(date)
               ),
             ],
           ),
@@ -200,73 +220,72 @@ class _CreateTaskState extends State<CreateTask> {
             ),
           ),
           
-          //Geri ve task ekle tuşları
+          // Back and Update buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ElevatedButton(
-                onPressed: ()=>Navigator.pop(context), 
-                child: Text("Back")
+                onPressed: () => Navigator.pop(context), 
+                child: Text("Cancel")
               ),
               ElevatedButton(
                 onPressed: () async {
-                  //Listeye ekle
-                  if(description != null && title != null && date != null){
+                  // Update task
+                  if (description.isNotEmpty && title.isNotEmpty && date.isNotEmpty) {
                     try {
-                      log("Creating task: ${title}\n${description}\n${date}");
-                      final task = Task(
+                      log("Updating task: ${title}\n${description}\n${date}");
+                      
+                      // Cancel existing notification
+                      await NotificationService().cancelTaskNotification(widget.task.taskID ?? 0);
+                      
+                      // Update task with new data
+                      final updatedTask = Task(
+                        taskID: widget.task.taskID,
                         description: description, 
                         dueDateTime: date, 
                         title: title,
+                        isCompleted: widget.task.isCompleted,
+                        priority: priority,
                         notificationTypes: selectedNotificationTypes,
                       );
-                      int id = await db.addTask(task);
-                      task.taskID=id;
                       
-                      log("Task created with ID: ${task.taskID}");
-                      log("Scheduling notification for: ${task.dueDateTime}");
+                      // Update in database
+                      await db.updateTask(updatedTask);
                       
-                      // Schedule notification for the task
-                      await NotificationService().scheduleTaskNotification(task);
+                      log("Task updated with ID: ${updatedTask.taskID}");
+                      log("Scheduling new notification for: ${updatedTask.dueDateTime}");
+                      log("${updatedTask.priority}/////////////////////////////////////////////////");
+                      // Schedule new notification for the updated task
+                      await NotificationService().scheduleTaskNotification(updatedTask);
                       
-                      log("Task creation completed");
+                      log("Task update completed");
                       Navigator.pop(context);
                     } catch (e) {
-                      log("Error creating task: $e");
+                      log("Error updating task: $e");
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Error creating task: $e'),
+                          content: Text('Error updating task: $e'),
                           backgroundColor: Colors.red,
                         ),
                       );
                     }
                   } else {
                     log("Missing required fields: title=$title, description=$description, date=$date");
-                    // Show warning message to user
+                    // Show error message to user
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Please fill in all the blanks'),
+                        content: Text('Please fill in all required fields'),
                         backgroundColor: Colors.red,
-                        duration: Duration(seconds: 3),
-                        action: SnackBarAction(
-                          label: 'OK',
-                          textColor: Colors.white,
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          },
-                        ),
                       ),
                     );
                   }
-                  
                 }, 
-                child: Text("Add Task")
+                child: Text("Update Task")
               ),
-              
             ],
           )
         ],
       ),
-      );
+    );
   }
-}
+} 
