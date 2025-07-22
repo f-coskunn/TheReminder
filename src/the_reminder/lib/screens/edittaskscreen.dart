@@ -125,13 +125,12 @@ class _EditTaskState extends State<EditTask> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: ListView(
         children: [
           // Title input
           Text("Title"),
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
               controller: TextEditingController(text: title),
               onChanged: (value) {
@@ -144,7 +143,7 @@ class _EditTaskState extends State<EditTask> {
           // Description input
           Text("Description"),
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
               controller: TextEditingController(text: description),
               onChanged: (value) {
