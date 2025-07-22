@@ -4,7 +4,7 @@ import 'package:the_reminder/widgets/colorful_decorator.dart';
 class MediumPriorityDecorator extends ColorfulDecorator {
   @override
   // TODO: implement color
-  Color get color => Colors.yellow;
-  const MediumPriorityDecorator(super.child, {super.color=Colors.yellow,super.key});
+  Color get color => const Color.fromARGB(0, 255, 235, 59);
+  const MediumPriorityDecorator(super.child, {super.color,super.key});
 
 }
