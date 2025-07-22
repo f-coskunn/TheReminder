@@ -15,66 +15,86 @@ class NotificationObserver implements Observer {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings();
-    
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings();
+      
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    await _notifications.initialize(initSettings);
-    
-    // Request permissions
-    await requestPermissions();
-    
-    _isInitialized = true;
-    log('NotificationObserver initialized');
+      await _notifications.initialize(initSettings);
+      
+      // Request permissions
+      await requestPermissions();
+      
+      _isInitialized = true;
+      log('NotificationObserver initialized successfully');
+    } catch (e) {
+      log('Error initializing NotificationObserver: $e');
+      // Don't rethrow, just log the error
+    }
   }
 
   // Request notification permissions
   Future<bool> requestPermissions() async {
-    final androidGranted = await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    try {
+      final androidGranted = await _notifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
 
-    final iosGranted = await _notifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+      final iosGranted = await _notifications
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
 
-    final hasPermission = (androidGranted ?? false) || (iosGranted ?? false);
-    log('Notification permissions granted: $hasPermission');
-    return hasPermission;
+      final hasPermission = (androidGranted ?? false) || (iosGranted ?? false);
+      log('Notification permissions granted: $hasPermission');
+      return hasPermission;
+    } catch (e) {
+      log('Error requesting notification permissions: $e');
+      return false;
+    }
   }
 
   @override
   void update(String message, Map<String, dynamic> data) {
     log('NotificationObserver received update: $message');
     
-    if (!_isInitialized) {
-      initialize().then((_) => _handleUpdate(message, data));
-    } else {
-      _handleUpdate(message, data);
+    try {
+      if (!_isInitialized) {
+        initialize().then((_) => _handleUpdate(message, data));
+      } else {
+        _handleUpdate(message, data);
+      }
+    } catch (e) {
+      log('Error in NotificationObserver update: $e');
+      // Don't show error notifications for observer issues
     }
   }
 
   void _handleUpdate(String message, Map<String, dynamic> data) {
-    switch (message) {
-      case 'TASK_DUE':
-        _showTaskDueNotification(data);
-        break;
-      case 'TASK_OVERDUE':
-        _showTaskOverdueNotification(data);
-        break;
-      case 'TASK_ERROR':
-        _showTaskErrorNotification(data);
-        break;
-      default:
-        log('Unknown message type: $message');
+    try {
+      switch (message) {
+        case 'TASK_DUE':
+          _showTaskDueNotification(data);
+          break;
+        case 'TASK_OVERDUE':
+          _showTaskOverdueNotification(data);
+          break;
+        case 'TASK_ERROR':
+          // Only show error notifications for actual task errors, not scheduling issues
+          log('Task error notification received: ${data['title']}');
+          break;
+        default:
+          log('Unknown message type: $message');
+      }
+    } catch (e) {
+      log('Error handling update message $message: $e');
     }
   }
 

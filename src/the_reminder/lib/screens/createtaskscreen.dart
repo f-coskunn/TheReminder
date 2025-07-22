@@ -227,9 +227,23 @@ class _CreateTaskState extends State<CreateTask> {
                       log("Scheduling notification for: ${task.dueDateTime}");
                       
                       // Schedule notification for the task
-                      await NotificationService().scheduleTaskNotification(task);
+                      try {
+                        await NotificationService().scheduleTaskNotification(task);
+                        log("Notification scheduled successfully");
+                      } catch (notificationError) {
+                        log("Warning: Could not schedule notification: $notificationError");
+                        // Don't show error to user for notification issues
+                        // The task was created successfully
+                      }
                       
                       log("Task creation completed");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Task created successfully!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
                       Navigator.pop(context);
                     } catch (e) {
                       log("Error creating task: $e");
