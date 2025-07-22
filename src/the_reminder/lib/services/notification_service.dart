@@ -1,7 +1,6 @@
 import 'dart:developer';
 import '../observer/task_subject.dart';
 import '../observer/notification_observer.dart';
-import '../observer/email_observer.dart';
 import '../model/task_model.dart';
 
 // Service class that coordinates the Observer pattern for notifications
@@ -12,7 +11,6 @@ class NotificationService {
 
   final TaskSubject _taskSubject = TaskSubject();
   final NotificationObserver _notificationObserver = NotificationObserver();
-  final EmailObserver _emailObserver = EmailObserver();
   bool _isInitialized = false;
 
   // Initialize the notification service
@@ -21,11 +19,9 @@ class NotificationService {
 
     // Initialize observers
     await _notificationObserver.initialize();
-    await _emailObserver.initialize();
     
     // Attach observers to subject
     _taskSubject.attach(_notificationObserver);
-    _taskSubject.attach(_emailObserver);
     
     _isInitialized = true;
     log('NotificationService initialized with ${_taskSubject.getActiveTimerCount()} active timers');
@@ -69,6 +65,14 @@ class NotificationService {
   // Handle overdue tasks manually (if needed)
   void handleOverdueTask(Task task) {
     _taskSubject.handleOverdueTask(task);
+  }
+
+  // Test a notification immediately (for testing)
+  Future<void> testTaskNotification(Task task) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    _taskSubject.triggerTaskNotification(task);
   }
 
   // Add a new observer (demonstrates extensibility)
