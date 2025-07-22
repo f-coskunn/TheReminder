@@ -1,3 +1,6 @@
+
+import 'dart:developer';
+
 import 'package:the_reminder/model/reminder_model.dart';
 
 
@@ -39,6 +42,8 @@ Task({
 
   //Reminder dışarda yaratılıp atancak
    factory Task.fromMap(Map<String, dynamic> map) {
+    log(map['priority']);
+    log("up/////////////////////////////////////////////////////////");
     return Task(
       taskID: map['taskID'],
       title: map['title'],
@@ -58,15 +63,15 @@ Task({
   }
 
   // Converts enum to string
-  String _priorityToString(Priority p) => p.name;
+  String _priorityToString(Priority p) => p.name.toString();
 
 
   // Converts string to enum
   static Priority _priorityFromString(String s) {
     switch (s.toLowerCase()) {
-      case 'High':
+      case 'high':
         return Priority.High;
-      case 'Low':
+      case 'low':
         return Priority.Low;
       default:
         return Priority.Medium;
