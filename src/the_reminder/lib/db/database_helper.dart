@@ -120,6 +120,11 @@ class DatabaseHelper {
 
     // Cache'deki listeyi güncelle
     _tasks?.removeWhere((t) => t.taskID == taskID);
+    
+    // Force refresh cache by setting it to null
+    _tasks = null;
+    
+    log('Task deleted: $taskID');
   }
 
   Future<void> updateTask(Task task) async {

@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   //TODO:tamamlanma değerini databasede de değiştir
                   setState(() {
                     task.setCompleted = e ?? false;
+                    db.updateTask(task);
                   });
                 }
               ),
@@ -127,15 +128,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   // Delete button
                   IconButton(
-                    color: Colors.red,
-                    //TODO:Taskı databaseten de sil
-                    onPressed:() async {
-                      setState(() {
-                        db.deleteTask(task.taskID??=0);
-                      });
-                      // Cancel notification for deleted task
-                      await NotificationService().cancelTaskNotification(task.taskID ?? 0);
-                    }, 
+                    color: Colors.white,
+                        //TODO:Taskı databaseten de sil
+                        onPressed:() async {
+                          // Cancel notification for deleted task first
+                          await NotificationService().cancelTaskNotification(task.taskID ?? 0);
+                          
+                          // Delete from database
+                          await db.deleteTask(task.taskID??=0);
+                          
+                          // Refresh the UI after deletion
+                          setState(() {
+                            tasksFuture = db.tasks;
+                          });
+                        }, 
                     icon: Icon(Icons.delete)
                   ),
                 ],

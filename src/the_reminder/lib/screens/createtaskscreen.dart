@@ -65,6 +65,7 @@ class _CreateTaskState extends State<CreateTask> {
   var description="",date,title;
   List<NotificationType> selectedNotificationTypes = [NotificationType.Visual];
   DatabaseHelper db = DatabaseHelper.instance;
+  Priority? _priority = Priority.Medium;
 
   //Check for accessibility settings and decorate accordingly
 
@@ -100,13 +101,13 @@ class _CreateTaskState extends State<CreateTask> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: ListView(
+        shrinkWrap: true,
         children: [
           //Title inputu al
           Text("Title"),
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
               onChanged: (value){
                 setState(() {
@@ -118,7 +119,7 @@ class _CreateTaskState extends State<CreateTask> {
           //Descriptipn inputu al
           Text("Description"),
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
               onChanged: (value){
                 setState(() {
@@ -127,6 +128,49 @@ class _CreateTaskState extends State<CreateTask> {
               },
             ),
           ),
+
+          //add priority
+          Text("Priority"),
+          ListTile(
+            title: const Text('Low'),
+            leading: Radio<Priority>(
+              value: Priority.Low, 
+              groupValue: _priority, 
+              onChanged: (e){
+                setState(() {
+                  _priority = e;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
+          ListTile(
+            title: const Text('Medium'),
+            leading: Radio<Priority>(
+              value: Priority.Medium, 
+              groupValue: _priority, 
+              onChanged: (e){
+                setState(() {
+                  _priority = e;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
+          ListTile(
+            title: const Text('High'),
+            leading: Radio<Priority>(
+              value: Priority.High, 
+              groupValue: _priority, 
+              onChanged: (e){
+                setState(() {
+                  _priority = e;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
+
           //add reminder
 
           //due date time inputu al
@@ -198,10 +242,19 @@ class _CreateTaskState extends State<CreateTask> {
                     }
                   } else {
                     log("Missing required fields: title=$title, description=$description, date=$date");
+                    // Show warning message to user
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Please fill in all required fields'),
+                        content: Text('Please fill in all the blanks'),
                         backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                        action: SnackBarAction(
+                          label: 'OK',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          },
+                        ),
                       ),
                     );
                   }

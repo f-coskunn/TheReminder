@@ -75,6 +75,7 @@ class _EditTaskState extends State<EditTask> {
   late String date;
   late String title;
   late List<NotificationType> selectedNotificationTypes;
+  late Priority priority;
   DatabaseHelper db = DatabaseHelper.instance;
 
   @override
@@ -85,6 +86,8 @@ class _EditTaskState extends State<EditTask> {
     date = widget.task.dueDateTime ?? "";
     title = widget.task.title ?? "";
     selectedNotificationTypes = List.from(widget.task.notificationTypes);
+    priority = widget.task.priority;
+    log("Edit task with values:$description $date $title $priority");
   }
 
   Future _selectDateTime() async {
@@ -151,6 +154,47 @@ class _EditTaskState extends State<EditTask> {
               },
             ),
           ),
+          //add priority
+          Text("Priority"),
+          ListTile(
+            title: const Text('Low'),
+            leading: Radio<Priority>(
+              value: Priority.Low, 
+              groupValue: priority, 
+              onChanged: (e){
+                setState(() {
+                  priority = e ?? Priority.Low;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
+          ListTile(
+            title: const Text('Medium'),
+            leading: Radio<Priority>(
+              value: Priority.Medium, 
+              groupValue: priority, 
+              onChanged: (e){
+                setState(() {
+                  priority = e ?? Priority.Medium;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
+          ListTile(
+            title: const Text('High'),
+            leading: Radio<Priority>(
+              value: Priority.High, 
+              groupValue: priority, 
+              onChanged: (e){
+                setState(() {
+                  priority = e?? Priority.High;
+                  log("Priority changed to $e");
+                });
+              }
+            ),
+          ),
           // Due date time input
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -202,7 +246,7 @@ class _EditTaskState extends State<EditTask> {
                         dueDateTime: date, 
                         title: title,
                         isCompleted: widget.task.isCompleted,
-                        priority: widget.task.priority,
+                        priority: priority,
                         notificationTypes: selectedNotificationTypes,
                       );
                       
@@ -211,7 +255,7 @@ class _EditTaskState extends State<EditTask> {
                       
                       log("Task updated with ID: ${updatedTask.taskID}");
                       log("Scheduling new notification for: ${updatedTask.dueDateTime}");
-                      
+                      log("${updatedTask.priority}/////////////////////////////////////////////////");
                       // Schedule new notification for the updated task
                       await NotificationService().scheduleTaskNotification(updatedTask);
                       
