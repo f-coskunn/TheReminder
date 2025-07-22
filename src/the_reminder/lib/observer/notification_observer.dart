@@ -2,11 +2,11 @@ import 'dart:developer';
 import 'observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'reminder_strategy.dart';
-import 'notification_observer.dart';
-import 'audio_reminder.dart';
-import 'vibration_reminder.dart';
-import 'visual_reminder.dart';
+import '../strategy/reminder_strategy.dart';
+//import 'notification_observer.dart';
+import '../strategy/audio_reminder.dart';
+import '../strategy/vibration_reminder.dart';
+import '../strategy/visual_reminder.dart';
 
 // Concrete implementation of Observer for phone notifications
 class NotificationObserver implements Observer {
@@ -56,16 +56,13 @@ class NotificationObserver implements Observer {
     return hasPermission;
   }
 
-  @override
+  /*@override
   void update(String message, Map<String, dynamic> data) {
-    print('🔔 Notification received: $message');
-    print('📦 Data: $data');
-
     // You can use data if needed (e.g. show task name in visual reminder)
-    strategy.remind();
-  }
 
-  /*
+  } */
+
+  
   @override
   void update(String message, Map<String, dynamic> data) {
     log('NotificationObserver received update: $message');
@@ -75,7 +72,9 @@ class NotificationObserver implements Observer {
     } else {
       _handleUpdate(message, data);
     }
-  }*/
+
+    strategy.remind();
+  }
 
   void _handleUpdate(String message, Map<String, dynamic> data) {
     switch (message) {

@@ -7,7 +7,7 @@ class AudioReminder implements ReminderStrategy {
   @override
   void remind({String? message, Map<String, dynamic>? data}) async {
     await _player.play(AssetSource('sounds/reminder_sound.mp3'));
-    final task = data?['taskName'] ?? 'a task';
-    print("🔊 Audio reminder: $task - $message");
+    //final task = data?['taskName'] ?? 'a task';
+    //print("🔊 Audio reminder: $task - $message");
   }
 }

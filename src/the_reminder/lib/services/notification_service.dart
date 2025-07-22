@@ -1,8 +1,8 @@
 import 'dart:developer';
 import '../observer/task_subject.dart';
 import '../observer/notification_observer.dart';
-import '../observer/email_observer.dart';
 import '../model/task_model.dart';
+import '../strategy/audio_reminder.dart';
 
 // Service class that coordinates the Observer pattern for notifications
 class NotificationService {
@@ -11,8 +11,11 @@ class NotificationService {
   NotificationService._internal();
 
   final TaskSubject _taskSubject = TaskSubject();
-  final NotificationObserver _notificationObserver = NotificationObserver();
-  final EmailObserver _emailObserver = EmailObserver();
+  // Use AudioReminder as the default strategy
+  final NotificationObserver _notificationObserver = NotificationObserver(
+    strategy: AudioReminder(),
+  );
+
   bool _isInitialized = false;
 
   // Initialize the notification service
@@ -21,14 +24,14 @@ class NotificationService {
 
     // Initialize observers
     await _notificationObserver.initialize();
-    await _emailObserver.initialize();
-    
+
     // Attach observers to subject
     _taskSubject.attach(_notificationObserver);
-    _taskSubject.attach(_emailObserver);
-    
+
     _isInitialized = true;
-    log('NotificationService initialized with ${_taskSubject.getActiveTimerCount()} active timers');
+    log(
+      'NotificationService initialized with ${_taskSubject.getActiveTimerCount()} active timers',
+    );
   }
 
   // Schedule a notification for a task
@@ -74,13 +77,17 @@ class NotificationService {
   // Add a new observer (demonstrates extensibility)
   void addObserver(dynamic observer) {
     _taskSubject.attach(observer);
-    log('New observer added. Total observers: ${_taskSubject.getActiveTimerCount()}');
+    log(
+      'New observer added. Total observers: ${_taskSubject.getActiveTimerCount()}',
+    );
   }
 
   // Remove an observer
   void removeObserver(dynamic observer) {
     _taskSubject.detach(observer);
-    log('Observer removed. Total observers: ${_taskSubject.getActiveTimerCount()}');
+    log(
+      'Observer removed. Total observers: ${_taskSubject.getActiveTimerCount()}',
+    );
   }
 
   // Dispose resources
@@ -91,4 +98,4 @@ class NotificationService {
 
   // Get the task subject for direct access if needed
   TaskSubject get taskSubject => _taskSubject;
-} 
+}

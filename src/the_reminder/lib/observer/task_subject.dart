@@ -39,26 +39,30 @@ class TaskSubject implements Subject {
   }
 
   // Schedule a task and notify observers when time comes
-  void scheduleTask(Task task) async{
+  void scheduleTask(Task task) async {
     try {
       final dueDateTime = DateTime.parse(task.dueDateTime);
       final taskId = task.taskID ?? 0;
       // Check if the time is in the past
       if (dueDateTime.isBefore(DateTime.now())) {
-        log('Task time is in the past, skipping notification for: ${task.title}');
+        log(
+          'Task time is in the past, skipping notification for: ${task.title}',
+        );
         // Don't notify for overdue tasks when rescheduling
         return;
       }
-      
+
       final delay = dueDateTime.difference(DateTime.now());
-      
+
       log('Scheduling task: ${task.title} at ${dueDateTime}');
-      log('Delay: ${delay.inMinutes} minutes and ${delay.inSeconds % 60} seconds');
+      log(
+        'Delay: ${delay.inMinutes} minutes and ${delay.inSeconds % 60} seconds',
+      );
       log('Task ID: $taskId');
-      
+
       // Cancel any existing timer for this task
       _timers[taskId]?.cancel();
-      
+
       // Create a timer for the notification
       _timers[taskId] = Timer(delay, () {
         log('Timer fired for task: ${task.title}');
@@ -75,7 +79,7 @@ class TaskSubject implements Subject {
         task.description ?? 'You have a task due.',
         tz.TZDateTime.now(tz.local).add(delay),
         const NotificationDetails(
-            android: AndroidNotificationDetails(
+          android: AndroidNotificationDetails(
             'task_reminders',
             'Task Reminders',
             channelDescription: 'Notifications for task reminders',
@@ -84,12 +88,12 @@ class TaskSubject implements Subject {
             playSound: true,
             icon: '@mipmap/ic_launcher',
             color: Colors.blue,
-          )
+          ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
-      
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+
       log('Task scheduled successfully. Active timers: ${_timers.length}');
-      
     } catch (e) {
       log('Error scheduling task ${task.title}: $e');
       notify('TASK_ERROR', _createTaskData(task));
@@ -97,20 +101,19 @@ class TaskSubject implements Subject {
   }
 
   // Cancel a scheduled task
-  void cancelTask(int taskId) async{
+  void cancelTask(int taskId) async {
     _timers[taskId]?.cancel();
     _timers.remove(taskId);
     log('Cancelled task: $taskId. Active timers: ${_timers.length}');
-    
   }
 
   // Cancel all scheduled tasks
-  void cancelAllTasks() async{
+  void cancelAllTasks() async {
     for (var timer in _timers.values) {
       timer.cancel();
     }
     _timers.clear();
-    
+
     log('Cancelled all tasks');
   }
 
@@ -143,4 +146,4 @@ class TaskSubject implements Subject {
     _observers.clear();
     log('TaskSubject disposed');
   }
-} 
+}

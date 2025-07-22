@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:the_reminder/db/database_helper.dart';
 import 'package:the_reminder/db/settings_helper.dart';
@@ -11,7 +11,6 @@ import 'package:the_reminder/screens/homescreen.dart';
 import 'package:the_reminder/screens/settingsscreen.dart';
 import 'package:the_reminder/widgets/accessible_contrast_decorator.dart';
 import 'package:the_reminder/widgets/accessible_font_decorator.dart';
-import 'package:the_reminder/screens/settingsscreen.dart';
 import 'package:the_reminder/services/notification_service.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
@@ -78,9 +77,9 @@ class _MainAppState extends State<MainApp> {
           if (dueDateTime.isAfter(now)) {
             await NotificationService().scheduleTaskNotification(task);
             scheduledCount++;
-            log('Rescheduled notification for future task: ${task.title} at ${dueDateTime}');
+            log('Rescheduled notification for future task: ${task.title} at $dueDateTime');
           } else {
-            log('Skipped overdue task: ${task.title} (was due at ${dueDateTime})');
+            log('Skipped overdue task: ${task.title} (was due at $dueDateTime)');
           }
         }
       }
@@ -99,7 +98,7 @@ class _MainAppState extends State<MainApp> {
   }
   //TODO: change this to fontsize
   Widget _home(){
-    Widget h = _homeScaffold();
+    //Widget h = _homeScaffold();
     if(settings["fontSize"]!=null){
       return FontDecorator(_homeScaffold(),fontSize: settings["fontSize"],);
     }
