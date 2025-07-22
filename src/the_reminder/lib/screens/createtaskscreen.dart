@@ -7,6 +7,7 @@ import 'package:the_reminder/db/settings_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/services/notification_service.dart';
 import 'package:the_reminder/widgets/accessible_font_decorator.dart';
+import 'package:the_reminder/widgets/notification_type_selector.dart';
 //import 'package:the_reminder/temp_singleton.dart';
 
 class CreatetaskScreen extends StatefulWidget {
@@ -62,6 +63,7 @@ class CreateTask extends StatefulWidget {
 
 class _CreateTaskState extends State<CreateTask> {
   var description="",date,title;
+  List<NotificationType> selectedNotificationTypes = [NotificationType.Visual];
   DatabaseHelper db = DatabaseHelper.instance;
 
   //Check for accessibility settings and decorate accordingly
@@ -141,6 +143,19 @@ class _CreateTaskState extends State<CreateTask> {
             ],
           ),
           
+          // Notification type selection
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: NotificationTypeSelector(
+              selectedTypes: selectedNotificationTypes,
+              onChanged: (List<NotificationType> types) {
+                setState(() {
+                  selectedNotificationTypes = types;
+                });
+              },
+            ),
+          ),
+          
           //Geri ve task ekle tuşları
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -153,21 +168,42 @@ class _CreateTaskState extends State<CreateTask> {
                 onPressed: () async {
                   //Listeye ekle
                   if(description != null && title != null && date != null){
-                    log("Creating task: ${title}\n${description}\n${date}");
-                    final task = Task(description: description, dueDateTime: date, title: title);
-                    int id = await db.addTask(task);
-                    task.taskID=id;
-                    
-                    log("Task created with ID: ${task.taskID}");
-                    log("Scheduling notification for: ${task.dueDateTime}");
-                    
-                    // Schedule notification for the task
-                    await NotificationService().scheduleTaskNotification(task);
-                    
-                    log("Task creation completed");
-                    Navigator.pop(context);
+                    try {
+                      log("Creating task: ${title}\n${description}\n${date}");
+                      final task = Task(
+                        description: description, 
+                        dueDateTime: date, 
+                        title: title,
+                        notificationTypes: selectedNotificationTypes,
+                      );
+                      int id = await db.addTask(task);
+                      task.taskID=id;
+                      
+                      log("Task created with ID: ${task.taskID}");
+                      log("Scheduling notification for: ${task.dueDateTime}");
+                      
+                      // Schedule notification for the task
+                      await NotificationService().scheduleTaskNotification(task);
+                      
+                      log("Task creation completed");
+                      Navigator.pop(context);
+                    } catch (e) {
+                      log("Error creating task: $e");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error creating task: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   } else {
                     log("Missing required fields: title=$title, description=$description, date=$date");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please fill in all required fields'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                   
                 }, 

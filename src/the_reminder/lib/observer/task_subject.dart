@@ -66,27 +66,27 @@ class TaskSubject implements Subject {
         _timers.remove(taskId);
       });
 
+      // Initialize timezone for background notifications
       tz.initializeTimeZones();
       tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
 
+      // Schedule background notification
+      final notificationDetails = _createNotificationDetails(task);
+      final notificationTypes = task.notificationTypes.map((t) => t.name).join(', ');
+      
+      log('Scheduling background notification for task: ${task.title}');
+      log('Notification types: $notificationTypes');
+      log('Sound enabled: ${task.notificationTypes.contains(NotificationType.Audio)}');
+      log('Vibration enabled: ${task.notificationTypes.contains(NotificationType.Vibration)}');
+      
       await flutterLocalNotificationsPlugin.zonedSchedule(
-        taskId, // Use taskId instead of 0 for uniqueness
+        taskId,
         task.title ?? 'Task Reminder',
         task.description ?? 'You have a task due.',
         tz.TZDateTime.now(tz.local).add(delay),
-        const NotificationDetails(
-            android: AndroidNotificationDetails(
-            'task_reminders',
-            'Task Reminders',
-            channelDescription: 'Notifications for task reminders',
-            importance: Importance.high,
-            enableVibration: true,
-            playSound: true,
-            icon: '@mipmap/ic_launcher',
-            color: Colors.blue,
-          )
-        ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
       
       log('Task scheduled successfully. Active timers: ${_timers.length}');
       
@@ -100,8 +100,11 @@ class TaskSubject implements Subject {
   void cancelTask(int taskId) async{
     _timers[taskId]?.cancel();
     _timers.remove(taskId);
-    log('Cancelled task: $taskId. Active timers: ${_timers.length}');
     
+    // Also cancel the scheduled notification
+    await flutterLocalNotificationsPlugin.cancel(taskId);
+    
+    log('Cancelled task: $taskId. Active timers: ${_timers.length}');
   }
 
   // Cancel all scheduled tasks
@@ -110,6 +113,9 @@ class TaskSubject implements Subject {
       timer.cancel();
     }
     _timers.clear();
+    
+    // Cancel all scheduled notifications
+    await flutterLocalNotificationsPlugin.cancelAll();
     
     log('Cancelled all tasks');
   }
@@ -125,6 +131,12 @@ class TaskSubject implements Subject {
     notify('TASK_OVERDUE', _createTaskData(task));
   }
 
+  // Manually trigger a task notification (for testing)
+  void triggerTaskNotification(Task task) {
+    log('Manually triggering notification for task: ${task.title}');
+    notify('TASK_DUE', _createTaskData(task));
+  }
+
   // Create task data for observers
   Map<String, dynamic> _createTaskData(Task task) {
     return {
@@ -134,7 +146,43 @@ class TaskSubject implements Subject {
       'dueDateTime': task.dueDateTime,
       'priority': task.priority.name,
       'isCompleted': task.isCompleted,
+      'notificationTypes': task.notificationTypes.map((t) => t.name).toList(),
     };
+  }
+
+  // Create notification details based on task's notification types
+  NotificationDetails _createNotificationDetails(Task task) {
+    bool enableVibration = task.notificationTypes.contains(NotificationType.Vibration);
+    bool playSound = task.notificationTypes.contains(NotificationType.Audio);
+    
+    // Use different channels based on notification types
+    String channelId = playSound ? 'task_reminders_audio' : 'task_reminders_silent';
+    String channelName = playSound ? 'Task Reminders (Audio)' : 'Task Reminders (Silent)';
+    String channelDescription = playSound 
+        ? 'Notifications with sound for task reminders'
+        : 'Silent notifications for task reminders';
+    
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      importance: Importance.high,
+      enableVibration: enableVibration,
+      playSound: playSound,
+      icon: '@mipmap/ic_launcher',
+      color: Colors.blue,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+    );
+
+    return NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
   }
 
   // Dispose resources

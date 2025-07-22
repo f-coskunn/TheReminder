@@ -34,7 +34,7 @@ class DatabaseHelper {
     final dbpath = join(dbdir,"the_reminder_db.db");
     final db = await openDatabase(
       dbpath,
-      version: 1,
+      version: 2, // Increment version to trigger migration
       //Tablelar burada yaratılıyor ilk açılışta
       //TODO: user ekliyeceksek buradan ekliyeceğiz
       onCreate: (db,version){
@@ -47,7 +47,8 @@ class DatabaseHelper {
             description TEXT,
             dueDateTime TEXT NOT NULL,
             isCompleted INTEGER DEFAULT 0,
-            priority TEXT
+            priority TEXT,
+            notificationTypes TEXT DEFAULT 'Visual'
             );
           ''');
         //Reminder Table
@@ -59,6 +60,20 @@ class DatabaseHelper {
           FOREIGN KEY (taskID) REFERENCES Task(taskID)
           );
           ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        log('Upgrading database from version $oldVersion to $newVersion');
+        
+        if (oldVersion < 2) {
+          // Add notificationTypes column to existing Task table
+          try {
+            await db.execute('ALTER TABLE Task ADD COLUMN notificationTypes TEXT DEFAULT "Visual"');
+            log('Added notificationTypes column to Task table');
+          } catch (e) {
+            log('Error adding notificationTypes column: $e');
+            // Column might already exist, ignore error
+          }
+        }
       }
     );
     log("done gettin db");
@@ -108,25 +123,30 @@ class DatabaseHelper {
   }
 
   Future<void> updateTask(Task task) async {
-    final db = await database;
-    
-    // Update the task
-    await db.update(
-      'Task',
-      task.toMap(),
-      where: 'taskID = ?',
-      whereArgs: [task.taskID],
-    );
+    try {
+      final db = await database;
+      
+      // Update the task
+      await db.update(
+        'Task',
+        task.toMap(),
+        where: 'taskID = ?',
+        whereArgs: [task.taskID],
+      );
 
-    // Update cache if it exists
-    if (_tasks != null) {
-      final index = _tasks!.indexWhere((t) => t.taskID == task.taskID);
-      if (index != -1) {
-        _tasks![index] = task;
+      // Update cache if it exists
+      if (_tasks != null) {
+        final index = _tasks!.indexWhere((t) => t.taskID == task.taskID);
+        if (index != -1) {
+          _tasks![index] = task;
+        }
       }
+      
+      log('Task updated: ${task.title}');
+    } catch (e) {
+      log('Error updating task: $e');
+      rethrow; // Re-throw to handle in UI
     }
-    
-    log('Task updated: ${task.title}');
   }
 
   //Bu metodla taskları almıyoruz. db.tasks ile taskları çağırıyoruz

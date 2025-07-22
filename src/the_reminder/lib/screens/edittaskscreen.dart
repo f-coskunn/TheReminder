@@ -7,6 +7,7 @@ import 'package:the_reminder/db/settings_helper.dart';
 import 'package:the_reminder/model/task_model.dart';
 import 'package:the_reminder/services/notification_service.dart';
 import 'package:the_reminder/widgets/accessible_font_decorator.dart';
+import 'package:the_reminder/widgets/notification_type_selector.dart';
 
 class EditTaskScreen extends StatefulWidget {
   final Task task;
@@ -73,6 +74,7 @@ class _EditTaskState extends State<EditTask> {
   late String description;
   late String date;
   late String title;
+  late List<NotificationType> selectedNotificationTypes;
   DatabaseHelper db = DatabaseHelper.instance;
 
   @override
@@ -82,6 +84,7 @@ class _EditTaskState extends State<EditTask> {
     description = widget.task.description ?? "";
     date = widget.task.dueDateTime ?? "";
     title = widget.task.title ?? "";
+    selectedNotificationTypes = List.from(widget.task.notificationTypes);
   }
 
   Future _selectDateTime() async {
@@ -161,6 +164,19 @@ class _EditTaskState extends State<EditTask> {
             ],
           ),
           
+          // Notification type selection
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: NotificationTypeSelector(
+              selectedTypes: selectedNotificationTypes,
+              onChanged: (List<NotificationType> types) {
+                setState(() {
+                  selectedNotificationTypes = types;
+                });
+              },
+            ),
+          ),
+          
           // Back and Update buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -173,32 +189,43 @@ class _EditTaskState extends State<EditTask> {
                 onPressed: () async {
                   // Update task
                   if (description.isNotEmpty && title.isNotEmpty && date.isNotEmpty) {
-                    log("Updating task: ${title}\n${description}\n${date}");
-                    
-                    // Cancel existing notification
-                    await NotificationService().cancelTaskNotification(widget.task.taskID ?? 0);
-                    
-                    // Update task with new data
-                    final updatedTask = Task(
-                      taskID: widget.task.taskID,
-                      description: description, 
-                      dueDateTime: date, 
-                      title: title,
-                      isCompleted: widget.task.isCompleted,
-                      priority: widget.task.priority,
-                    );
-                    
-                    // Update in database
-                    await db.updateTask(updatedTask);
-                    
-                    log("Task updated with ID: ${updatedTask.taskID}");
-                    log("Scheduling new notification for: ${updatedTask.dueDateTime}");
-                    
-                    // Schedule new notification for the updated task
-                    await NotificationService().scheduleTaskNotification(updatedTask);
-                    
-                    log("Task update completed");
-                    Navigator.pop(context);
+                    try {
+                      log("Updating task: ${title}\n${description}\n${date}");
+                      
+                      // Cancel existing notification
+                      await NotificationService().cancelTaskNotification(widget.task.taskID ?? 0);
+                      
+                      // Update task with new data
+                      final updatedTask = Task(
+                        taskID: widget.task.taskID,
+                        description: description, 
+                        dueDateTime: date, 
+                        title: title,
+                        isCompleted: widget.task.isCompleted,
+                        priority: widget.task.priority,
+                        notificationTypes: selectedNotificationTypes,
+                      );
+                      
+                      // Update in database
+                      await db.updateTask(updatedTask);
+                      
+                      log("Task updated with ID: ${updatedTask.taskID}");
+                      log("Scheduling new notification for: ${updatedTask.dueDateTime}");
+                      
+                      // Schedule new notification for the updated task
+                      await NotificationService().scheduleTaskNotification(updatedTask);
+                      
+                      log("Task update completed");
+                      Navigator.pop(context);
+                    } catch (e) {
+                      log("Error updating task: $e");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error updating task: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   } else {
                     log("Missing required fields: title=$title, description=$description, date=$date");
                     // Show error message to user
