@@ -152,7 +152,8 @@ class _CreateTaskState extends State<CreateTask> {
               ElevatedButton(
                 onPressed: () async {
                   //Listeye ekle
-                  if(description != null && title != null && date != null){
+                  if(description != null && title != null && date != null && 
+                     description.isNotEmpty && title.isNotEmpty && date.isNotEmpty){
                     log("Creating task: ${title}\n${description}\n${date}");
                     final task = Task(description: description, dueDateTime: date, title: title);
                     int id = await db.addTask(task);
@@ -168,6 +169,21 @@ class _CreateTaskState extends State<CreateTask> {
                     Navigator.pop(context);
                   } else {
                     log("Missing required fields: title=$title, description=$description, date=$date");
+                    // Show warning message to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please fill in all the blanks'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                        action: SnackBarAction(
+                          label: 'OK',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          },
+                        ),
+                      ),
+                    );
                   }
                   
                 }, 

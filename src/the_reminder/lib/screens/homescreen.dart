@@ -111,11 +111,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.red,
                             //TODO:Taskı databaseten de sil
                             onPressed:() async {
-                              setState(() {
-                                db.deleteTask(task.taskID??=0);
-                              });
-                              // Cancel notification for deleted task
+                              // Cancel notification for deleted task first
                               await NotificationService().cancelTaskNotification(task.taskID ?? 0);
+                              
+                              // Delete from database
+                              await db.deleteTask(task.taskID??=0);
+                              
+                              // Refresh the UI after deletion
+                              setState(() {
+                                tasksFuture = db.tasks;
+                              });
                             }, 
                             icon: Icon(Icons.delete)
                           ),
