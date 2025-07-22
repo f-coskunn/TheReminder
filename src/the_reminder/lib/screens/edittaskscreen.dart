@@ -128,7 +128,15 @@ class _EditTaskState extends State<EditTask> {
       child: ListView(
         children: [
           // Title input
-          Text("Title"),
+          Center(
+            child: Text(
+              "Title",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
@@ -141,7 +149,15 @@ class _EditTaskState extends State<EditTask> {
             ),
           ),
           // Description input
-          Text("Description"),
+          Center(
+            child: Text(
+              "Description",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
@@ -154,7 +170,15 @@ class _EditTaskState extends State<EditTask> {
             ),
           ),
           //add priority
-          Text("Priority"),
+          Center(
+            child: Text(
+              "Priority",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           ListTile(
             title: const Text('Low'),
             leading: Radio<Priority>(

@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   // Delete button
                   IconButton(
-                    color: Colors.white,
+                    color: Colors.pink,
                         //TODO:Taskı databaseten de sil
                         onPressed:() async {
                           // Cancel notification for deleted task first

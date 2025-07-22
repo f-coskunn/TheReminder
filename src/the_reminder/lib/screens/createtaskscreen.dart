@@ -105,7 +105,15 @@ class _CreateTaskState extends State<CreateTask> {
         shrinkWrap: true,
         children: [
           //Title inputu al
-          Text("Title"),
+          Center(
+            child: Text(
+              "Title",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
@@ -117,7 +125,15 @@ class _CreateTaskState extends State<CreateTask> {
             ),
           ),
           //Descriptipn inputu al
-          Text("Description"),
+          Center(
+            child: Text(
+              "Description",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
@@ -130,7 +146,15 @@ class _CreateTaskState extends State<CreateTask> {
           ),
 
           //add priority
-          Text("Priority"),
+          Center(
+            child: Text(
+              "Priority",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           ListTile(
             title: const Text('Low'),
             leading: Radio<Priority>(
