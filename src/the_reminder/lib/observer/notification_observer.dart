@@ -83,7 +83,7 @@ class NotificationObserver implements Observer {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-
+    log("Notification types:${notificationTypes.toString()}");
     _executeNotificationStrategies(data, notificationTypes);
     _showCustomNotification(taskId, title, description, Colors.blue, notificationTypes);
   }
@@ -120,7 +120,7 @@ class NotificationObserver implements Observer {
   void _showCustomNotification(int id, String title, String body, Color color, List<String> notificationTypes) {
     // Create different notification details based on selected types
     NotificationDetails details;
-    
+    log("Contains vibration? ${notificationTypes.contains('Vibration')}");
     if (notificationTypes.contains('Audio')) {
       // Audio notification - with sound
       final androidDetails = AndroidNotificationDetails(
