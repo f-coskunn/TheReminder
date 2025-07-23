@@ -83,9 +83,9 @@ class NotificationObserver implements Observer {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-
+    log("Notification types:${notificationTypes.toString()}");
     _executeNotificationStrategies(data, notificationTypes);
-    _showCustomNotification(taskId, title, description, Colors.blue, notificationTypes);
+    //_showCustomNotification(taskId, title, description, Colors.blue, notificationTypes);
   }
 
   void _showTaskOverdueNotification(Map<String, dynamic> data) {
@@ -95,7 +95,7 @@ class NotificationObserver implements Observer {
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
 
     _executeNotificationStrategies(data, notificationTypes);
-    _showCustomNotification(taskId, '$title (OVERDUE)', description, Colors.red, notificationTypes);
+    //_showCustomNotification(taskId, '$title (OVERDUE)', description, Colors.red, notificationTypes);
   }
 
   void _showTaskErrorNotification(Map<String, dynamic> data) {
@@ -105,22 +105,22 @@ class NotificationObserver implements Observer {
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
 
     _executeNotificationStrategies(data, notificationTypes);
-    _showCustomNotification(taskId, '$title (ERROR)', description, Colors.orange, notificationTypes);
+    //_showCustomNotification(taskId, '$title (ERROR)', description, Colors.orange, notificationTypes);
   }
 
   void _executeNotificationStrategies(Map<String, dynamic> data, List<String> notificationTypes) {
     // Execute all selected notification strategies
-    for (final notificationType in notificationTypes) {
-      final strategy = NotificationStrategyFactory.createStrategy(notificationType);
-      _strategyContext.setStrategy(strategy);
-      _strategyContext.executeStrategy(data);
-    }
-  }
 
+    final strategy = NotificationStrategyFactory.createStrategy(notificationTypes);
+    _strategyContext.setStrategy(strategy);
+    _strategyContext.executeStrategy(data);
+    
+  }
+/*
   void _showCustomNotification(int id, String title, String body, Color color, List<String> notificationTypes) {
     // Create different notification details based on selected types
     NotificationDetails details;
-    
+    log("Contains vibration? ${notificationTypes.contains('Vibration')}");
     if (notificationTypes.contains('Audio')) {
       // Audio notification - with sound
       final androidDetails = AndroidNotificationDetails(
@@ -173,13 +173,15 @@ class NotificationObserver implements Observer {
     log('Custom notification sent: $title with types: ${notificationTypes.join(', ')}');
     log('Sound enabled: ${notificationTypes.contains('Audio')}');
     log('Vibration enabled: ${notificationTypes.contains('Vibration')}');
-  }
+  }*/
 
   // Handle background notification with proper notification types
   void _handleBackgroundNotification(int id, String title, String body, Color color, List<String> notificationTypes) {
     // For background notifications, we need to show the notification immediately
     // but we can still respect the notification types for the strategy execution
-    _showCustomNotification(id, title, body, color, notificationTypes);
+    Map<String,dynamic> data = {'title':title,'description':body,'taskID':id} ;
+    _executeNotificationStrategies(data, notificationTypes);
+    //_showCustomNotification(id, title, body, color, notificationTypes);
   }
 
   // Show an immediate notification (for testing)
@@ -187,8 +189,9 @@ class NotificationObserver implements Observer {
     if (!_isInitialized) {
       await initialize();
     }
-
-    _showCustomNotification(999, title, body, Colors.blue, notificationTypes);
+    Map<String,dynamic> data = {'title':title,'description':body,'taskID':"9999"} ;
+    _executeNotificationStrategies(data, notificationTypes);
+    //_showCustomNotification(999, title, body, Colors.blue, notificationTypes);
   }
 
   // Cancel a specific notification
@@ -202,13 +205,13 @@ class NotificationObserver implements Observer {
     await _notifications.cancelAll();
     log('Cancelled all notifications');
   }
-
+/*
   // Test different notification strategies
   Future<void> testNotificationStrategy(String strategyType, Map<String, dynamic> data) async {
     final strategy = NotificationStrategyFactory.createStrategy(strategyType);
     _strategyContext.setStrategy(strategy);
     await _strategyContext.executeStrategy(data);
-  }
+  }*/
 
   // Test notification with specific types
   Future<void> testNotificationWithTypes(List<String> notificationTypes, String title, String body) async {

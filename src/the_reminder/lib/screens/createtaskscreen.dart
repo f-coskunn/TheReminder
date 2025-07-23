@@ -65,7 +65,7 @@ class _CreateTaskState extends State<CreateTask> {
   var description="",date,title;
   List<NotificationType> selectedNotificationTypes = [NotificationType.Visual];
   DatabaseHelper db = DatabaseHelper.instance;
-  Priority? _priority = Priority.Medium;
+  Priority _priority = Priority.Medium;
 
   //Check for accessibility settings and decorate accordingly
 
@@ -162,7 +162,7 @@ class _CreateTaskState extends State<CreateTask> {
               groupValue: _priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  _priority = e ?? Priority.Low;
                   log("Priority changed to $e");
                 });
               }
@@ -175,7 +175,7 @@ class _CreateTaskState extends State<CreateTask> {
               groupValue: _priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  _priority = e ?? Priority.Medium;
                   log("Priority changed to $e");
                 });
               }
@@ -188,7 +188,7 @@ class _CreateTaskState extends State<CreateTask> {
               groupValue: _priority, 
               onChanged: (e){
                 setState(() {
-                  _priority = e;
+                  _priority = e ?? Priority.High;
                   log("Priority changed to $e");
                 });
               }
@@ -219,6 +219,7 @@ class _CreateTaskState extends State<CreateTask> {
               onChanged: (List<NotificationType> types) {
                 setState(() {
                   selectedNotificationTypes = types;
+                  log('Selected notification types are:${types.toString()}');
                 });
               },
             ),
@@ -242,6 +243,7 @@ class _CreateTaskState extends State<CreateTask> {
                         description: description, 
                         dueDateTime: date, 
                         title: title,
+                        priority: _priority,
                         notificationTypes: selectedNotificationTypes,
                       );
                       int id = await db.addTask(task);
