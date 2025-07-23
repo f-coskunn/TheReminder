@@ -154,6 +154,7 @@ class AudioStrategy implements NotificationStrategy {
 
   @override
   Future<void> execute(Map<String, dynamic> data,Color color) async {
+    log("AUDİO STRATEGY EXECUTED///////////////////////////////////////////////////////////////");
     final title = data['title'] ?? 'Task Due';
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
@@ -208,6 +209,7 @@ class AudioVibrationStrategy implements NotificationStrategy {
 
   @override
   Future<void> execute(Map<String, dynamic> data,Color color) async {
+    log("VİBRATİON AND AUDİO FEEDBACk //////////////////////////////////////");
     final title = data['title'] ?? 'Task Due';
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
@@ -290,7 +292,7 @@ class NotificationStrategyFactory {
       log("Audio strategy");
         return AudioStrategy();
       default:
-        return AudioStrategy(); // Default to audio
+        return AudioVibrationStrategy(); // Default to audio
     }
     }
     
