@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -21,70 +22,33 @@ class VibrationStrategy implements NotificationStrategy {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-    try {
+
       // Create different notification details based on selected types
     NotificationDetails details;
     log("Contains vibration? ${notificationTypes.contains('Vibration')}");
-    if (notificationTypes.contains('Audio')) {
       // Audio notification - with sound
       final androidDetails = AndroidNotificationDetails(
-        'task_reminders_audio',
-        'Task Reminders (Audio)',
+        'task_reminders_vibration',
+        'Task Reminders (Vibration)',
         channelDescription: 'Notifications with sound for task reminders',
         importance: Importance.high,
-        enableVibration: notificationTypes.contains('Vibration'),
-        playSound: true,
-        icon: '@mipmap/ic_launcher',
-        color: color,
-      );
-
-      final iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
-
-      details = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
-    } else {
-      // Silent notification - no sound
-      final androidDetails = AndroidNotificationDetails(
-        'task_reminders_silent',
-        'Task Reminders (Silent)',
-        channelDescription: 'Silent notifications for task reminders',
-        importance: Importance.high,
-        enableVibration: notificationTypes.contains('Vibration'),
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 500, 1000, 500]),
         playSound: false,
         icon: '@mipmap/ic_launcher',
         color: color,
       );
 
-      final iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: false,
-      );
-
       details = NotificationDetails(
         android: androidDetails,
-        iOS: iosDetails,
       );
-    }
-
+    
     _notifications.show(taskId, title, description, details);
     log('Custom notification sent: $title with types: ${notificationTypes.join(', ')}');
     log('Sound enabled: ${notificationTypes.contains('Audio')}');
     log('Vibration enabled: ${notificationTypes.contains('Vibration')}');
       log('Visual notification strategy executed for task: ${data['title']}');
-      
-      // Note: Visual notifications need to be handled in the UI layer
-      // The actual visual notification will be triggered from the UI
-      // when the notification observer receives the update
-    } catch (e) {
-      log('Error executing visual strategy: $e');
-    }
+
   }
   
   @override
@@ -102,7 +66,7 @@ class VisualStrategy implements NotificationStrategy {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-    try {
+
       // Create different notification details based on selected types
     NotificationDetails details;
     final androidDetails = AndroidNotificationDetails(
@@ -116,15 +80,8 @@ class VisualStrategy implements NotificationStrategy {
         color: color,
       );
 
-      final iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: false,
-      );
-
       details = NotificationDetails(
         android: androidDetails,
-        iOS: iosDetails,
       );
 
     _notifications.show(taskId, title, description, details);
@@ -132,13 +89,7 @@ class VisualStrategy implements NotificationStrategy {
     log('Sound enabled: ${notificationTypes.contains('Audio')}');
     log('Vibration enabled: ${notificationTypes.contains('Vibration')}');
       log('Visual notification strategy executed for task: ${data['title']}');
-      
-      // Note: Visual notifications need to be handled in the UI layer
-      // The actual visual notification will be triggered from the UI
-      // when the notification observer receives the update
-    } catch (e) {
-      log('Error executing visual strategy: $e');
-    }
+
   }
   
   @override
@@ -159,7 +110,7 @@ class AudioStrategy implements NotificationStrategy {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-    try {
+
       // Create different notification details based on selected types
     NotificationDetails details;
     log("Contains vibration? ${notificationTypes.contains('Vibration')}");
@@ -174,15 +125,8 @@ class AudioStrategy implements NotificationStrategy {
         color: color,
       );
 
-      final iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
-
       details = NotificationDetails(
         android: androidDetails,
-        iOS: iosDetails,
       );
 
     _notifications.show(taskId, title, description, details);
@@ -190,13 +134,7 @@ class AudioStrategy implements NotificationStrategy {
     log('Sound enabled: ${notificationTypes.contains('Audio')}');
     log('Vibration enabled: ${notificationTypes.contains('Vibration')}');
       log('Visual notification strategy executed for task: ${data['title']}');
-      
-      // Note: Visual notifications need to be handled in the UI layer
-      // The actual visual notification will be triggered from the UI
-      // when the notification observer receives the update
-    } catch (e) {
-      log('Error executing visual strategy: $e');
-    }
+
   }
 }
 
@@ -214,7 +152,7 @@ class AudioVibrationStrategy implements NotificationStrategy {
     final description = data['description'] ?? '';
     final taskId = data['taskID'] ?? 0;
     final notificationTypes = (data['notificationTypes'] as List<dynamic>?)?.cast<String>() ?? ['Audio'];
-    try {
+
       // Create different notification details based on selected types
     NotificationDetails details;
     log("Contains vibration? ${notificationTypes.contains('Vibration')}");
@@ -224,20 +162,15 @@ class AudioVibrationStrategy implements NotificationStrategy {
         channelDescription: 'Notifications with sound and vibration for task reminders',
         importance: Importance.high,
         enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 500, 1000, 500]),
         playSound: true,
         icon: '@mipmap/ic_launcher',
         color: color,
       );
 
-      final iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
 
       details = NotificationDetails(
         android: androidDetails,
-        iOS: iosDetails,
       );
 
     _notifications.show(taskId, title, description, details);
@@ -245,13 +178,7 @@ class AudioVibrationStrategy implements NotificationStrategy {
     log('Sound enabled: ${notificationTypes.contains('Audio')}');
     log('Vibration enabled: ${notificationTypes.contains('Vibration')}');
       log('Visual notification strategy executed for task: ${data['title']}');
-      
-      // Note: Visual notifications need to be handled in the UI layer
-      // The actual visual notification will be triggered from the UI
-      // when the notification observer receives the update
-    } catch (e) {
-      log('Error executing visual strategy: $e');
-    }
+
   }
 }
 
@@ -280,20 +207,19 @@ class NotificationStrategyFactory {
     log("Types in the factory: ${types.toString()}");
     if(types.length==3){
       return AudioVibrationStrategy();
-    }else{
+    }else if(types.length==2){
       switch (types[1].toLowerCase()) {
       case 'vibration':
       log("Vibration strategy");
         return VibrationStrategy();
-      case 'visual':
-      log("Visual strategy");
-        return VisualStrategy();
       case 'audio':
       log("Audio strategy");
         return AudioStrategy();
       default:
         return AudioVibrationStrategy(); // Default to audio
     }
+    }else{
+      return VisualStrategy();
     }
     
   }

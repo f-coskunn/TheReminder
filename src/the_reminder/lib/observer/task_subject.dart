@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -154,12 +155,29 @@ class TaskSubject implements Subject {
 
   // Create notification details based on task's notification types
   NotificationDetails _createNotificationDetails(Task task) {
+    
     bool enableVibration = task.notificationTypes.contains(NotificationType.Vibration);
     bool playSound = task.notificationTypes.contains(NotificationType.Audio);
-    
-    // Use different channels based on notification types
-    String channelId = playSound ? 'task_reminders_audio' : 'task_reminders_silent';
+
+    String channelId=playSound ? 'task_reminders_audio' : 'task_reminders_silent';
     String channelName = playSound ? 'Task Reminders (Audio)' : 'Task Reminders (Silent)';
+
+    if(task.notificationTypes.length==3){
+      channelId = 'task_reminders_audio_vibration';
+      channelName = 'Task Reminders (Audio Vibration)';
+    }else if(task.notificationTypes.length==2){
+      if(playSound == false){
+        channelId = 'task_reminders_vibration';
+        channelName = 'Task Reminders (Vibration)';
+      }else{
+        channelId = 'task_reminders_audio';
+        channelName = 'Task Reminders (Audio)';
+      }
+    }else{
+      channelId = 'task_reminders_silent';
+      channelName = 'Task Reminders (Silent)';
+    }
+    
     String channelDescription = playSound 
         ? 'Notifications with sound for task reminders'
         : 'Silent notifications for task reminders';
@@ -170,20 +188,15 @@ class TaskSubject implements Subject {
       channelDescription: channelDescription,
       importance: Importance.high,
       enableVibration: enableVibration,
+      vibrationPattern: Int64List.fromList([0, 500, 1000, 500]),
       playSound: playSound,
       icon: '@mipmap/ic_launcher',
       color: Colors.blue,
     );
 
-    final iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: playSound,
-    );
 
     return NotificationDetails(
       android: androidDetails,
-      iOS: iosDetails,
     );
   }
 
