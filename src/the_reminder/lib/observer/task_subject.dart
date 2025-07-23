@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'observer.dart';
 import 'subject.dart';
@@ -68,7 +69,8 @@ class TaskSubject implements Subject {
 
       // Initialize timezone for background notifications
       tz.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
+      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(currentTimeZone));
 
       // Schedule background notification
       final notificationDetails = _createNotificationDetails(task);
