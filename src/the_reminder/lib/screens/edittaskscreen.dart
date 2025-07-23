@@ -279,7 +279,6 @@ class _EditTaskState extends State<EditTask> {
                       
                       log("Task updated with ID: ${updatedTask.taskID}");
                       log("Scheduling new notification for: ${updatedTask.dueDateTime}");
-                      log("${updatedTask.priority}/////////////////////////////////////////////////");
                       // Schedule new notification for the updated task
                       await NotificationService().scheduleTaskNotification(updatedTask);
                       

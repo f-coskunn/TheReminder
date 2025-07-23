@@ -47,7 +47,6 @@ Task({
   //Reminder dışarda yaratılıp atancak
    factory Task.fromMap(Map<String, dynamic> map) {
     log(map['priority']);
-    log("up/////////////////////////////////////////////////////////");
     return Task(
       taskID: map['taskID'],
       title: map['title'],
