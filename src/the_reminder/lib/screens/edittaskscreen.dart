@@ -212,7 +212,7 @@ class _EditTaskState extends State<EditTask> {
               groupValue: priority, 
               onChanged: (e){
                 setState(() {
-                  priority = e?? Priority.High;
+                  priority = e ?? Priority.High;
                   log("Priority changed to $e");
                 });
               }
@@ -239,6 +239,7 @@ class _EditTaskState extends State<EditTask> {
               onChanged: (List<NotificationType> types) {
                 setState(() {
                   selectedNotificationTypes = types;
+                  log('Selected notification types are:${types.toString()}');
                 });
               },
             ),
