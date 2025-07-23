@@ -77,6 +77,10 @@ class _EditTaskState extends State<EditTask> {
   late List<NotificationType> selectedNotificationTypes;
   late Priority priority;
   DatabaseHelper db = DatabaseHelper.instance;
+  
+  // Add persistent controllers
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
 
   @override
   void initState() {
@@ -87,7 +91,20 @@ class _EditTaskState extends State<EditTask> {
     title = widget.task.title ?? "";
     selectedNotificationTypes = List.from(widget.task.notificationTypes);
     priority = widget.task.priority;
+    
+    // Initialize controllers with existing data
+    _titleController = TextEditingController(text: title);
+    _descriptionController = TextEditingController(text: description);
+    
     log("Edit task with values:$description $date $title $priority");
+  }
+  
+  @override
+  void dispose() {
+    // Dispose controllers to prevent memory leaks
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future _selectDateTime() async {
@@ -140,7 +157,7 @@ class _EditTaskState extends State<EditTask> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
-              controller: TextEditingController(text: title),
+              controller: _titleController,
               onChanged: (value) {
                 setState(() {
                   title = value;
@@ -161,7 +178,7 @@ class _EditTaskState extends State<EditTask> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
             child: TextField(
-              controller: TextEditingController(text: description),
+              controller: _descriptionController,
               onChanged: (value) {
                 setState(() {
                   description = value;
